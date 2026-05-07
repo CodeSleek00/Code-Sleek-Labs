@@ -9,7 +9,7 @@ include 'db.php';
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Attendance Scan</title>
+<title>AI Attendance Scan</title>
 
 <script src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
 
@@ -21,10 +21,10 @@ body{
     background:#020617;
     font-family:Arial;
     color:white;
+    min-height:100vh;
     display:flex;
     justify-content:center;
     align-items:center;
-    min-height:100vh;
 }
 
 .main{
@@ -43,6 +43,7 @@ h1{
     margin-top:0;
     text-align:center;
     margin-bottom:25px;
+    font-size:35px;
 }
 
 button{
@@ -55,6 +56,7 @@ button{
     font-size:16px;
     cursor:pointer;
     margin-bottom:20px;
+    font-weight:bold;
 }
 
 button:hover{
@@ -78,43 +80,60 @@ canvas{
     left:0;
 }
 
+.status{
+    margin-top:15px;
+    text-align:center;
+    color:#38bdf8;
+    font-size:18px;
+}
+
 #studentCard{
-    margin-top:20px;
+    margin-top:25px;
     background:#1e293b;
-    padding:20px;
-    border-radius:15px;
+    border-radius:20px;
+    padding:25px;
     display:none;
     animation:fade .4s ease;
 }
 
-#studentCard img{
-    width:90px;
-    height:90px;
+#studentImage{
+    width:110px;
+    height:110px;
     border-radius:50%;
     object-fit:cover;
-    border:3px solid #22c55e;
-    margin-bottom:10px;
+    border:4px solid #22c55e;
+    margin-bottom:15px;
+}
+
+#studentName{
+    margin:10px 0;
+    font-size:28px;
+}
+
+#studentEnrollment,
+#studentTime{
+    color:#cbd5e1;
+    font-size:17px;
 }
 
 .success{
-    color:#22c55e;
-}
-
-.status{
-    text-align:center;
     margin-top:15px;
-    color:#38bdf8;
+    color:#22c55e;
+    font-size:22px;
 }
 
 @keyframes fade{
+
     from{
         opacity:0;
         transform:translateY(20px);
     }
+
     to{
         opacity:1;
         transform:translateY(0px);
     }
+
 }
 
 </style>
@@ -127,7 +146,7 @@ canvas{
 
 <div class="card">
 
-<h1>AI Attendance Scan</h1>
+<h1>AI Attendance Scanner</h1>
 
 <button onclick="startCamera()">
 Start Camera
@@ -146,8 +165,12 @@ playsinline>
 
 </div>
 
-<div class="status" id="status">
+<div
+class="status"
+id="status">
+
 Waiting To Start...
+
 </div>
 
 <div id="studentCard">
@@ -155,7 +178,7 @@ Waiting To Start...
 <center>
 
 <img
-src="https://cdn-icons-png.flaticon.com/512/3135/3135715.png"
+src=""
 id="studentImage"
 >
 
@@ -182,27 +205,33 @@ Attendance Marked Successfully
 const MODEL_URL =
 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api/model/';
 
-let modelsLoaded = false;
-
 let faceMatcher;
 
 let stream;
 
-let scannedStudents = {};
+let scanCooldown = false;
+
+/*
+LOAD MODELS
+*/
 
 async function loadModels(){
 
     await Promise.all([
 
-        faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL),
+        faceapi.nets.tinyFaceDetector.loadFromUri(
+            MODEL_URL
+        ),
 
-        faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL),
+        faceapi.nets.faceLandmark68Net.loadFromUri(
+            MODEL_URL
+        ),
 
-        faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL)
+        faceapi.nets.faceRecognitionNet.loadFromUri(
+            MODEL_URL
+        )
 
     ]);
-
-    modelsLoaded = true;
 
     document.getElementById(
         'status'
@@ -213,11 +242,9 @@ async function loadModels(){
 
 }
 
-window.onload = async()=>{
-
-    await loadModels();
-
-};
+/*
+LOAD FACES
+*/
 
 async function loadFaces(){
 
@@ -279,6 +306,10 @@ async function loadFaces(){
 
 }
 
+/*
+START CAMERA
+*/
+
 async function startCamera(){
 
     stream =
@@ -305,6 +336,10 @@ async function startCamera(){
     detectFaces();
 
 }
+
+/*
+FACE DETECTION
+*/
 
 async function detectFaces(){
 
@@ -362,6 +397,10 @@ async function detectFaces(){
             const box =
             detection.detection.box;
 
+            /*
+            DRAW BOX
+            */
+
             ctx.strokeStyle =
             '#22c55e';
 
@@ -391,7 +430,17 @@ async function detectFaces(){
 
             );
 
-            if(result.label != 'unknown'){
+            /*
+            MATCH FOUND
+            */
+
+            if(
+                result.label != 'unknown'
+                &&
+                !scanCooldown
+            ){
+
+                scanCooldown = true;
 
                 const response =
                 await fetch(
@@ -421,13 +470,23 @@ async function detectFaces(){
 
                 showStudent(student);
 
+                setTimeout(()=>{
+
+                    scanCooldown = false;
+
+                },4000);
+
             }
 
         });
 
-    },2500);
+    },2000);
 
 }
+
+/*
+SHOW STUDENT
+*/
 
 function showStudent(student){
 
@@ -436,10 +495,31 @@ function showStudent(student){
     ).style.display =
     'block';
 
+    /*
+    PHOTO
+    */
+
+    if(student.photo != ''){
+
+        document.getElementById(
+            'studentImage'
+        ).src =
+        student.photo;
+
+    }
+
+    /*
+    NAME
+    */
+
     document.getElementById(
         'studentName'
     ).innerHTML =
     student.name;
+
+    /*
+    ENROLLMENT
+    */
 
     document.getElementById(
         'studentEnrollment'
@@ -447,11 +527,21 @@ function showStudent(student){
     'Enrollment : ' +
     student.enrollment_id;
 
+    /*
+    DATE + TIME
+    */
+
     document.getElementById(
         'studentTime'
     ).innerHTML =
-    'Time : ' +
+    'Date : ' +
+    student.date +
+    '<br><br>Time : ' +
     student.time;
+
+    /*
+    STATUS
+    */
 
     if(student.already_marked){
 
@@ -492,6 +582,16 @@ function showStudent(student){
     }
 
 }
+
+/*
+LOAD EVERYTHING
+*/
+
+window.onload = async()=>{
+
+    await loadModels();
+
+};
 
 </script>
 
