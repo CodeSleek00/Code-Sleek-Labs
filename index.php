@@ -5,12 +5,13 @@ include 'db.php';
 <!DOCTYPE html>
 <html lang="en">
 <head>
+
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>AI Face Attendance</title>
+<title>AI Face Attendance System</title>
 
-<script defer src="https://unpkg.com/face-api.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
 
 <style>
 
@@ -18,8 +19,8 @@ body{
     margin:0;
     padding:0;
     background:#0f172a;
-    color:white;
     font-family:Arial;
+    color:white;
 }
 
 .container{
@@ -41,14 +42,14 @@ h1,h2{
 
 button{
     background:#38bdf8;
+    color:white;
     border:none;
     padding:12px 20px;
     border-radius:10px;
-    color:white;
     cursor:pointer;
-    font-size:15px;
-    margin-top:10px;
     margin-right:10px;
+    margin-top:10px;
+    font-size:15px;
 }
 
 button:hover{
@@ -61,14 +62,13 @@ select{
     border-radius:10px;
     border:none;
     margin-top:10px;
-    font-size:15px;
+    margin-bottom:10px;
 }
 
 .camera-box{
     position:relative;
     width:100%;
     max-width:640px;
-    margin-top:20px;
 }
 
 video{
@@ -93,8 +93,8 @@ canvas{
 .photoBox{
     width:100px;
     height:100px;
-    overflow:hidden;
     border-radius:10px;
+    overflow:hidden;
     border:2px solid #38bdf8;
 }
 
@@ -107,7 +107,7 @@ canvas{
 .studentBox{
     background:#334155;
     padding:15px;
-    border-radius:12px;
+    border-radius:10px;
     margin-bottom:10px;
 }
 
@@ -115,7 +115,14 @@ canvas{
     color:#22c55e;
 }
 
+.status{
+    margin-top:10px;
+    font-size:14px;
+    color:#38bdf8;
+}
+
 </style>
+
 </head>
 
 <body>
@@ -170,6 +177,8 @@ Capture Photo
 Save Registration
 </button>
 
+<div class="status" id="registerStatus"></div>
+
 <div class="camera-box">
 
 <video
@@ -196,6 +205,8 @@ playsinline>
 <button onclick="startAttendanceCamera()">
 Start Attendance Camera
 </button>
+
+<div class="status" id="attendanceStatus"></div>
 
 <div class="camera-box">
 
@@ -227,7 +238,9 @@ playsinline>
 <script>
 
 const MODEL_URL =
-'https://raw.githubusercontent.com/vladmandic/face-api/master/model/';
+'https://cdn.jsdelivr.net/npm/@vladmandic/face-api/model/';
+
+let modelsLoaded = false;
 
 let faceMatcher;
 
@@ -243,6 +256,11 @@ async function loadModels(){
 
     try{
 
+        document.getElementById(
+            'registerStatus'
+        ).innerHTML =
+        'Loading AI Models...';
+
         await Promise.all([
 
             faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL),
@@ -253,7 +271,14 @@ async function loadModels(){
 
         ]);
 
-        alert("AI Models Loaded");
+        modelsLoaded = true;
+
+        document.getElementById(
+            'registerStatus'
+        ).innerHTML =
+        'AI Models Loaded Successfully';
+
+        console.log("MODELS LOADED");
 
         await loadFaces();
 
@@ -269,9 +294,34 @@ async function loadModels(){
 
 }
 
-window.onload = loadModels;
+window.addEventListener(
+    'load',
+    async()=>{
+
+        if(typeof faceapi === 'undefined'){
+
+            alert(
+                "Face API Failed To Load"
+            );
+
+            return;
+
+        }
+
+        await loadModels();
+
+    }
+);
 
 async function startRegisterCamera(){
+
+    if(!modelsLoaded){
+
+        alert("Models Still Loading");
+
+        return;
+
+    }
 
     try{
 
@@ -294,13 +344,12 @@ async function startRegisterCamera(){
         video.srcObject =
         registerStream;
 
-        video.onloadedmetadata = ()=>{
+        await video.play();
 
-            video.play();
-
-            alert("Camera Started");
-
-        };
+        document.getElementById(
+            'registerStatus'
+        ).innerHTML =
+        'Camera Started Successfully';
 
     }catch(error){
 
@@ -313,6 +362,16 @@ async function startRegisterCamera(){
 }
 
 async function captureFace(){
+
+    if(!modelsLoaded){
+
+        alert(
+            "Models Still Loading"
+        );
+
+        return;
+
+    }
 
     const studentId =
     document.getElementById(
@@ -372,7 +431,9 @@ async function captureFace(){
 
         if(!detection){
 
-            alert("Face Not Detected");
+            alert(
+                "Face Not Detected Properly"
+            );
 
             return;
 
@@ -419,21 +480,23 @@ async function captureFace(){
 
         renderCapturedPhotos();
 
-        alert(
+        document.getElementById(
+            'registerStatus'
+        ).innerHTML =
 
-            "Captured " +
+        'Captured : ' +
 
-            capturedDescriptors.length +
+        capturedDescriptors.length +
 
-            "/5"
-
-        );
+        '/5 Photos';
 
     }catch(error){
 
         console.log(error);
 
-        alert("Face Detection Failed");
+        alert(
+            "Face Detection Failed"
+        );
 
     }
 
@@ -448,7 +511,7 @@ function renderCapturedPhotos(){
 
     container.innerHTML = '';
 
-    capturedImages.forEach(img => {
+    capturedImages.forEach(img=>{
 
         container.innerHTML += `
 
@@ -481,7 +544,9 @@ async function saveAllFaces(){
 
     if(capturedDescriptors.length < 3){
 
-        alert("Capture Minimum 3 Photos");
+        alert(
+            "Capture Minimum 3 Photos"
+        );
 
         return;
 
@@ -489,27 +554,35 @@ async function saveAllFaces(){
 
     for(const descriptor of capturedDescriptors){
 
-        await fetch('save_face.php',{
+        await fetch(
 
-            method:'POST',
+            'save_face.php',
 
-            headers:{
-                'Content-Type':'application/json'
-            },
+            {
 
-            body:JSON.stringify({
+                method:'POST',
 
-                student_id:studentId,
+                headers:{
+                    'Content-Type':'application/json'
+                },
 
-                descriptor:descriptor
+                body:JSON.stringify({
 
-            })
+                    student_id:studentId,
 
-        });
+                    descriptor:descriptor
+
+                })
+
+            }
+
+        );
 
     }
 
-    alert("Face Registration Completed");
+    alert(
+        "Face Registration Completed"
+    );
 
     capturedDescriptors = [];
 
@@ -518,6 +591,11 @@ async function saveAllFaces(){
     document.getElementById(
         'photoContainer'
     ).innerHTML = '';
+
+    document.getElementById(
+        'registerStatus'
+    ).innerHTML =
+    'Registration Saved Successfully';
 
     await loadFaces();
 
@@ -589,6 +667,16 @@ async function loadFaces(){
 
 async function startAttendanceCamera(){
 
+    if(!modelsLoaded){
+
+        alert(
+            "Models Still Loading"
+        );
+
+        return;
+
+    }
+
     try{
 
         attendanceStream =
@@ -606,13 +694,14 @@ async function startAttendanceCamera(){
         video.srcObject =
         attendanceStream;
 
-        video.onloadedmetadata = ()=>{
+        await video.play();
 
-            video.play();
+        document.getElementById(
+            'attendanceStatus'
+        ).innerHTML =
+        'Attendance Camera Started';
 
-            detectAttendance();
-
-        };
+        detectAttendance();
 
     }catch(error){
 
@@ -625,6 +714,12 @@ async function startAttendanceCamera(){
 }
 
 async function detectAttendance(){
+
+    if(!modelsLoaded){
+
+        return;
+
+    }
 
     const video =
     document.getElementById(
@@ -645,6 +740,7 @@ async function detectAttendance(){
     setInterval(async()=>{
 
         const detections =
+
         await faceapi
 
         .detectAllFaces(
@@ -663,12 +759,10 @@ async function detectAttendance(){
         canvas.getContext('2d');
 
         ctx.clearRect(
-
             0,
             0,
             canvas.width,
             canvas.height
-
         );
 
         detections.forEach(async detection=>{
@@ -698,6 +792,9 @@ async function detectAttendance(){
             ctx.fillStyle =
             '#22c55e';
 
+            ctx.font =
+            '18px Arial';
+
             ctx.fillText(
 
                 result.label,
@@ -710,22 +807,26 @@ async function detectAttendance(){
             if(result.label != 'unknown'){
 
                 await fetch(
+
                     'mark_attendance.php',
+
                     {
 
-                    method:'POST',
+                        method:'POST',
 
-                    headers:{
-                        'Content-Type':'application/json'
-                    },
+                        headers:{
+                            'Content-Type':'application/json'
+                        },
 
-                    body:JSON.stringify({
+                        body:JSON.stringify({
 
-                        student_id:result.label
+                            student_id:result.label
 
-                    })
+                        })
 
-                });
+                    }
+
+                );
 
                 loadAttendance();
 
@@ -760,25 +861,25 @@ async function loadAttendance(){
 
         <div class="studentBox">
 
-        <h3 class="present">
+            <h3 class="present">
 
-        ${item.name}
+                ${item.name}
 
-        </h3>
+            </h3>
 
-        <p>
+            <p>
 
-        Enrollment:
-        ${item.enrollment_id}
+                Enrollment :
+                ${item.enrollment_id}
 
-        </p>
+            </p>
 
-        <p>
+            <p>
 
-        Time:
-        ${item.attendance_time}
+                Time :
+                ${item.attendance_time}
 
-        </p>
+            </p>
 
         </div>
 
