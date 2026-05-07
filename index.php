@@ -14,113 +14,376 @@ include 'db.php';
 <script src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
 
 <style>
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap');
 
-body{
-    margin:0;
-    padding:0;
-    background:#0f172a;
-    font-family:Arial;
-    color:white;
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
 }
 
-.container{
-    width:95%;
-    margin:auto;
-    padding:20px;
+body {
+    font-family: 'Poppins', sans-serif;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: #1e293b;
+    min-height: 100vh;
+    padding: 20px;
 }
 
-.card{
-    background:#1e293b;
-    padding:20px;
-    border-radius:15px;
-    margin-bottom:20px;
+.container {
+    max-width: 1400px;
+    margin: 0 auto;
 }
 
-h1,h2{
-    margin-top:0;
+/* Header Section (70% White, 20% Blue, 10% Accent) */
+h1 {
+    background: linear-gradient(135deg, #ffffff 0%, #f8fafc 70%);
+    color: #1e3a8a;
+    padding: 30px;
+    border-radius: 20px;
+    margin-bottom: 30px;
+    text-align: center;
+    font-size: 2rem;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+    border: 1px solid rgba(59,130,246,0.2);
+    position: relative;
+    overflow: hidden;
 }
 
-button{
-    background:#38bdf8;
-    color:white;
-    border:none;
-    padding:12px 20px;
-    border-radius:10px;
-    cursor:pointer;
-    margin-right:10px;
-    margin-top:10px;
-    font-size:15px;
+h1::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 5px;
+    background: linear-gradient(90deg, #3b82f6 0%, #8b5cf6 100%);
 }
 
-button:hover{
-    background:#0ea5e9;
+h2 {
+    color: #1e3a8a;
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 3px solid #3b82f6;
+    display: inline-block;
 }
 
-select{
-    width:100%;
-    padding:12px;
-    border-radius:10px;
-    border:none;
-    margin-top:10px;
-    margin-bottom:10px;
+/* Cards - White Section (70%) */
+.card {
+    background: linear-gradient(135deg, #ffffff 0%, #fefefe 70%);
+    backdrop-filter: blur(10px);
+    border-radius: 24px;
+    padding: 30px;
+    margin-bottom: 30px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+    border: 1px solid rgba(59,130,246,0.15);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
-.camera-box{
-    position:relative;
-    width:100%;
-    max-width:640px;
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 25px 70px rgba(0,0,0,0.2);
 }
 
-video{
-    width:100%;
-    border-radius:15px;
-    background:black;
+/* Blue Elements (20%) */
+button {
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+    color: white;
+    border: none;
+    padding: 14px 28px;
+    border-radius: 50px;
+    cursor: pointer;
+    margin-right: 12px;
+    margin-top: 10px;
+    font-size: 14px;
+    font-weight: 600;
+    font-family: 'Poppins', sans-serif;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(59,130,246,0.3);
+    letter-spacing: 0.5px;
 }
 
-canvas{
-    position:absolute;
-    top:0;
-    left:0;
+button:hover {
+    background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(59,130,246,0.4);
 }
 
-#photoContainer{
-    display:flex;
-    gap:10px;
-    flex-wrap:wrap;
-    margin-top:20px;
+button:active {
+    transform: translateY(0);
 }
 
-.photoBox{
-    width:100px;
-    height:100px;
-    border-radius:10px;
-    overflow:hidden;
-    border:2px solid #38bdf8;
+/* Accent Elements (10% - Purple/Pink) */
+button:nth-child(2) {
+    background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+    box-shadow: 0 4px 15px rgba(139,92,246,0.3);
 }
 
-.photoBox img{
-    width:100%;
-    height:100%;
-    object-fit:cover;
+button:nth-child(3) {
+    background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
+    box-shadow: 0 4px 15px rgba(6,182,212,0.3);
 }
 
-.studentBox{
-    background:#334155;
-    padding:15px;
-    border-radius:10px;
-    margin-bottom:10px;
+.status {
+    background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+    color: #1e40af;
+    padding: 12px 20px;
+    border-radius: 12px;
+    margin-top: 15px;
+    font-size: 13px;
+    font-weight: 500;
+    border-left: 4px solid #3b82f6;
 }
 
-.present{
-    color:#22c55e;
+/* Select Dropdown */
+select {
+    width: 100%;
+    padding: 14px 18px;
+    border-radius: 12px;
+    border: 2px solid #e2e8f0;
+    background: white;
+    margin-top: 10px;
+    margin-bottom: 20px;
+    font-family: 'Poppins', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    color: #1e293b;
+    transition: all 0.3s ease;
+    cursor: pointer;
 }
 
-.status{
-    margin-top:10px;
-    font-size:14px;
-    color:#38bdf8;
+select:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59,130,246,0.1);
 }
 
+/* Circular Camera Screens */
+.camera-box {
+    position: relative;
+    width: 100%;
+    max-width: 640px;
+    margin: 20px auto;
+    border-radius: 50%;
+    overflow: hidden;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+    background: #0f172a;
+    aspect-ratio: 1 / 1;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.camera-box:hover {
+    transform: scale(1.02);
+    box-shadow: 0 30px 60px rgba(0,0,0,0.3);
+}
+
+video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 50%;
+    background: #0f172a;
+}
+
+canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    pointer-events: none;
+}
+
+/* Photo Container */
+#photoContainer {
+    display: flex;
+    gap: 15px;
+    flex-wrap: wrap;
+    margin-top: 25px;
+    padding: 15px;
+    background: #f8fafc;
+    border-radius: 16px;
+    justify-content: center;
+}
+
+.photoBox {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    overflow: hidden;
+    border: 3px solid #3b82f6;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    transition: transform 0.3s ease;
+    cursor: pointer;
+}
+
+.photoBox:hover {
+    transform: scale(1.1);
+    border-color: #8b5cf6;
+}
+
+.photoBox img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* Student List - Modern Cards */
+.studentBox {
+    background: linear-gradient(135deg, #f8fafc 0%, #ffffff 100%);
+    padding: 18px 22px;
+    border-radius: 16px;
+    margin-bottom: 12px;
+    border: 1px solid #e2e8f0;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.studentBox::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 4px;
+    height: 100%;
+    background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+}
+
+.studentBox:hover {
+    transform: translateX(5px);
+    box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+    border-color: #cbd5e1;
+}
+
+.studentBox h3 {
+    color: #1e3a8a;
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-bottom: 8px;
+}
+
+.present {
+    color: #059669;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.present::before {
+    content: '✓';
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    background: #10b981;
+    color: white;
+    border-radius: 50%;
+    text-align: center;
+    line-height: 20px;
+    font-size: 12px;
+}
+
+.studentBox p {
+    color: #475569;
+    font-size: 13px;
+    font-weight: 500;
+    margin: 5px 0;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    body {
+        padding: 15px;
+    }
+    
+    h1 {
+        font-size: 1.5rem;
+        padding: 20px;
+    }
+    
+    h2 {
+        font-size: 1.2rem;
+    }
+    
+    .card {
+        padding: 20px;
+    }
+    
+    button {
+        padding: 10px 18px;
+        font-size: 12px;
+        margin-right: 8px;
+    }
+    
+    .camera-box {
+        max-width: 100%;
+    }
+    
+    .photoBox {
+        width: 70px;
+        height: 70px;
+    }
+}
+
+@media (max-width: 480px) {
+    button {
+        display: block;
+        width: 100%;
+        margin-bottom: 10px;
+        margin-right: 0;
+    }
+    
+    .studentBox {
+        padding: 14px 18px;
+    }
+}
+
+/* Animation for camera status */
+@keyframes pulse {
+    0%, 100% {
+        box-shadow: 0 0 0 0 rgba(59,130,246,0.4);
+    }
+    50% {
+        box-shadow: 0 0 0 15px rgba(59,130,246,0);
+    }
+}
+
+.camera-box.active {
+    animation: pulse 2s infinite;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+    width: 10px;
+}
+
+::-webkit-scrollbar-track {
+    background: #f1f5f9;
+    border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+    border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(135deg, #2563eb 0%, #7c3aed 100%);
+}
+
+/* Attendance List Container */
+#attendanceList {
+    max-height: 400px;
+    overflow-y: auto;
+    padding: 5px;
+}
 </style>
 
 </head>
