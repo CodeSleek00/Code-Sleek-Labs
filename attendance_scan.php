@@ -45,17 +45,6 @@ h1{
     margin-bottom:25px;
 }
 
-input[type="date"]{
-    width:100%;
-    padding:14px;
-    border:none;
-    border-radius:12px;
-    margin-bottom:20px;
-    background:#1e293b;
-    color:white;
-    font-size:16px;
-}
-
 button{
     width:100%;
     padding:15px;
@@ -139,8 +128,6 @@ canvas{
 <div class="card">
 
 <h1>AI Attendance Scan</h1>
-
-<input type="date" id="attendanceDate">
 
 <button onclick="startCamera()">
 Start Camera
@@ -227,11 +214,6 @@ async function loadModels(){
 }
 
 window.onload = async()=>{
-
-    document.getElementById(
-        'attendanceDate'
-    ).value =
-    new Date().toISOString().split('T')[0];
 
     await loadModels();
 
@@ -411,14 +393,6 @@ async function detectFaces(){
 
             if(result.label != 'unknown'){
 
-                if(scannedStudents[result.label]){
-
-                    return;
-
-                }
-
-                scannedStudents[result.label] = true;
-
                 const response =
                 await fetch(
 
@@ -434,12 +408,7 @@ async function detectFaces(){
 
                         body:JSON.stringify({
 
-                            student_id:result.label,
-
-                            attendance_date:
-                            document.getElementById(
-                                'attendanceDate'
-                            ).value
+                            student_id:result.label
 
                         })
 
@@ -484,11 +453,43 @@ function showStudent(student){
     'Time : ' +
     student.time;
 
-    document.getElementById(
-        'status'
-    ).innerHTML =
-    student.name +
-    ' Attendance Marked';
+    if(student.already_marked){
+
+        document.querySelector(
+            '.success'
+        ).innerHTML =
+        'Attendance Already Marked Today';
+
+        document.querySelector(
+            '.success'
+        ).style.color =
+        '#f59e0b';
+
+        document.getElementById(
+            'status'
+        ).innerHTML =
+        student.name +
+        ' already marked';
+
+    }else{
+
+        document.querySelector(
+            '.success'
+        ).innerHTML =
+        'Attendance Marked Successfully';
+
+        document.querySelector(
+            '.success'
+        ).style.color =
+        '#22c55e';
+
+        document.getElementById(
+            'status'
+        ).innerHTML =
+        student.name +
+        ' attendance marked';
+
+    }
 
 }
 

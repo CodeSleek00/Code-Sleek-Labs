@@ -12,8 +12,10 @@ $date = date("Y-m-d");
 
 $time = date("h:i A");
 
+$alreadyMarked = false;
+
 /*
-CHECK ALREADY MARKED
+CHECK ATTENDANCE
 */
 
 $check = $conn->query("
@@ -37,10 +39,14 @@ if($check->num_rows == 0){
     )
     ");
 
+}else{
+
+    $alreadyMarked = true;
+
 }
 
 /*
-GET STUDENT DETAILS
+GET STUDENT
 */
 
 $student = $conn->query("
@@ -51,12 +57,14 @@ WHERE id='$student_id'
 $row = $student->fetch_assoc();
 
 /*
-RETURN JSON
+RETURN RESPONSE
 */
 
 echo json_encode([
 
     'success' => true,
+
+    'already_marked' => $alreadyMarked,
 
     'name' => $row['name'],
 
