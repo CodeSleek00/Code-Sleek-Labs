@@ -24,7 +24,7 @@ include 'db.php';
 
 body {
     font-family: 'Poppins', sans-serif;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #ffffff 0%, #764ba2 100%);
     color: #1e293b;
     min-height: 100vh;
     padding: 20px;
