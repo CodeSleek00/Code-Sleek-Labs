@@ -10,8 +10,7 @@ include 'db.php';
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <title>AI Face Attendance System</title>
-
-<script defer src="https://cdn.jsdelivr.net/npm/face-api.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
 
 <style>
 
