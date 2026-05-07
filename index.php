@@ -5,35 +5,21 @@ include 'db.php';
 <!DOCTYPE html>
 <html lang="en">
 <head>
-
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <title>AI Face Attendance System</title>
+
 <script defer src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
 
 <style>
 
-*{
+body{
     margin:0;
     padding:0;
-    box-sizing:border-box;
-}
-
-body{
     background:#0f172a;
     color:white;
-    font-family:Arial, sans-serif;
-}
-
-header{
-    padding:20px;
-    background:#111827;
-    border-bottom:1px solid #1e293b;
-}
-
-header h1{
-    color:#38bdf8;
+    font-family:Arial;
 }
 
 .container{
@@ -43,41 +29,24 @@ header h1{
 }
 
 .card{
-    background:#111827;
-    border:1px solid #1e293b;
-    border-radius:12px;
-    padding:20px;
-    margin-bottom:20px;
-}
-
-.card h2{
-    margin-bottom:20px;
-    color:#38bdf8;
-}
-
-table{
-    width:100%;
-    border-collapse:collapse;
-}
-
-table th,
-table td{
-    padding:12px;
-    border-bottom:1px solid #1e293b;
-    text-align:left;
-}
-
-table th{
     background:#1e293b;
+    padding:20px;
+    border-radius:15px;
+    margin-bottom:20px;
+}
+
+h1,h2{
+    margin-top:0;
 }
 
 button{
     background:#38bdf8;
-    color:white;
     border:none;
     padding:12px 20px;
-    border-radius:8px;
+    border-radius:10px;
+    color:white;
     cursor:pointer;
+    font-size:15px;
     margin-top:10px;
 }
 
@@ -88,369 +57,222 @@ button:hover{
 select{
     width:100%;
     padding:12px;
-    background:#0f172a;
-    border:1px solid #334155;
-    border-radius:8px;
-    color:white;
-    margin-bottom:15px;
+    border-radius:10px;
+    border:none;
+    margin-top:10px;
+    font-size:15px;
 }
 
 .camera-box{
     position:relative;
     width:100%;
-    max-width:700px;
+    max-width:500px;
+    margin-top:20px;
 }
 
 video{
     width:100%;
-    border-radius:12px;
+    border-radius:15px;
 }
 
 canvas{
     position:absolute;
-    top:0;
     left:0;
+    top:0;
 }
 
-.status{
+#photoContainer{
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap;
     margin-top:20px;
-    padding:15px;
+}
+
+.photoBox{
+    width:100px;
+    height:100px;
     border-radius:10px;
-    display:none;
+    overflow:hidden;
+    border:2px solid #38bdf8;
 }
 
-.success{
-    background:#14532d;
-    color:#4ade80;
+.photoBox img{
+    width:100%;
+    height:100%;
+    object-fit:cover;
 }
 
-.error{
-    background:#450a0a;
-    color:#f87171;
-}
-
-.log-item{
+.studentBox{
+    background:#334155;
     padding:15px;
-    border-bottom:1px solid #1e293b;
+    border-radius:12px;
+    margin-bottom:10px;
 }
 
-.badge{
-    background:#14532d;
-    color:#4ade80;
-    padding:5px 10px;
-    border-radius:20px;
-    font-size:12px;
+.present{
+    color:#22c55e;
 }
 
 </style>
-
 </head>
 
 <body>
 
-<header>
-    <h1>AI Face Attendance System</h1>
-</header>
-
 <div class="container">
 
-    <!-- STUDENTS -->
+<h1>AI Face Attendance System</h1>
 
-    <div class="card">
+<div class="card">
 
-        <h2>Students Database</h2>
+<h2>Register Face</h2>
 
-        <table>
+<select id="studentSelect">
 
-            <thead>
+<option value="">
+Select Student
+</option>
 
-                <tr>
-                    <th>ID</th>
-                    <th>Name</th>
-                    <th>Enrollment Number</th>
-                    <th>Class</th>
-                </tr>
+<?php
 
-            </thead>
+$students = $conn->query("
+SELECT * FROM students26
+");
 
-            <tbody>
+while($row = $students->fetch_assoc()){
 
-            <?php
+?>
 
-            $students = $conn->query("
-            SELECT * FROM students26
-            ");
+<option value="<?php echo $row['id']; ?>">
 
-            while($row = $students->fetch_assoc()){
+<?php echo $row['name']; ?>
 
-            ?>
+-
 
-            <tr>
+<?php echo $row['enrollment_id']; ?>
 
-                <td>
-                    <?php echo $row['id']; ?>
-                </td>
+</option>
 
-                <td>
-                    <?php echo $row['name']; ?>
-                </td>
+<?php } ?>
 
-                <td>
-                    <?php echo $row['enrollment_id']; ?>
-                </td>
+</select>
 
-                <td>
-                    <?php echo $row['class']; ?>
-                </td>
+<button onclick="startRegisterCamera()">
+Start Camera
+</button>
 
-            </tr>
+<div class="camera-box">
 
-            <?php } ?>
+<video
+id="registerVideo"
+autoplay
+muted
+playsinline>
+</video>
 
-            </tbody>
+<canvas id="registerCanvas"></canvas>
 
-        </table>
+</div>
 
-    </div>
+<button onclick="captureFace()">
+Capture Photo
+</button>
 
-    <!-- FACE REGISTRATION -->
+<button onclick="saveAllFaces()">
+Save Registration
+</button>
 
-    <div class="card">
+<div id="photoContainer"></div>
 
-        <h2>Register Student Face</h2>
+</div>
 
-        <select id="studentSelect">
+<div class="card">
 
-            <option value="">
-                Select Student
-            </option>
+<h2>Take Attendance</h2>
 
-            <?php
+<button onclick="startAttendanceCamera()">
+Start Attendance Camera
+</button>
 
-            $students2 = $conn->query("
-            SELECT * FROM students26
-            ");
+<div class="camera-box">
 
-            while($row2 = $students2->fetch_assoc()){
+<video
+id="attendanceVideo"
+autoplay
+muted
+playsinline>
+</video>
 
-            ?>
+<canvas id="attendanceCanvas"></canvas>
 
-            <option value="<?php echo $row2['id']; ?>">
+</div>
 
-                <?php echo $row2['name']; ?>
+</div>
 
-                -
+<div class="card">
 
-                <?php echo $row2['enrollment_id']; ?>
+<h2>Today's Attendance</h2>
 
-            </option>
+<div id="attendanceList"></div>
 
-            <?php } ?>
-
-        </select>
-
-        <button onclick="startRegisterCamera()">
-            Start Camera
-        </button>
-
-        <br><br>
-
-        <div class="camera-box">
-
-            <video
-            id="registerVideo"
-            autoplay
-            muted
-            playsinline>
-            </video>
-
-            <canvas id="registerCanvas"></canvas>
-
-        </div>
-
-        <button onclick="captureFace()">
-            Capture Face
-        </button>
-
-    </div>
-
-    <!-- ATTENDANCE -->
-
-    <div class="card">
-
-        <h2>Take Attendance</h2>
-
-        <button onclick="startAttendance()">
-            Start Attendance Camera
-        </button>
-
-        <br><br>
-
-        <div class="camera-box">
-
-            <video
-            id="video"
-            autoplay
-            muted
-            playsinline>
-            </video>
-
-            <canvas id="overlay"></canvas>
-
-        </div>
-
-        <div id="statusBox" class="status"></div>
-
-    </div>
-
-    <!-- ATTENDANCE LOG -->
-
-    <div class="card">
-
-        <h2>Today's Attendance</h2>
-
-        <div id="attendanceLog"></div>
-
-    </div>
+</div>
 
 </div>
 
 <script>
 
 const MODEL_URL =
-'https://cdn.jsdelivr.net/npm/@vladmandic/face-api/model';
+'https://cdn.jsdelivr.net/npm/@vladmandic/face-api@latest/model/';
 
-let faceMatcher = null;
+let faceMatcher;
 
-let attendanceRunning = false;
+let registerStream;
 
-let markedStudents = [];
+let attendanceStream;
 
+let capturedDescriptors = [];
 
-// LOAD MODELS
+let capturedImages = [];
 
 async function loadModels(){
 
-    try{
+    await Promise.all([
 
-        await Promise.all([
+        faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL),
 
-            faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL),
+        faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL),
 
-            faceapi.nets.faceLandmark68TinyNet.loadFromUri(MODEL_URL),
+        faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL)
 
-            faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL)
+    ]);
 
-        ]);
+    await loadFaces();
 
-        await loadFaces();
+    loadAttendance();
 
-        alert("AI Models Loaded Successfully");
-
-    }catch(error){
-
-        console.log(error);
-
-        alert("Model Loading Failed");
-
-    }
+    alert("AI Models Loaded");
 
 }
 
 loadModels();
 
-
-// LOAD FACES
-
-async function loadFaces(){
-
-    const response =
-    await fetch('load_faces.php');
-
-    const data =
-    await response.json();
-
-    const labeled = [];
-
-    for(const item of data){
-
-        const descriptors = [
-
-            new Float32Array(
-                JSON.parse(item.descriptor)
-            )
-
-        ];
-
-        labeled.push(
-
-            new faceapi.LabeledFaceDescriptors(
-
-                item.student_id.toString(),
-
-                descriptors
-
-            )
-
-        );
-
-    }
-
-    if(labeled.length > 0){
-
-        faceMatcher =
-        new faceapi.FaceMatcher(
-            labeled,
-            0.5
-        );
-
-    }
-
-}
-
-
-// REGISTER CAMERA
-
 async function startRegisterCamera(){
 
-    try{
+    registerStream =
+    await navigator.mediaDevices.getUserMedia({
 
-        const video =
-        document.getElementById(
-            'registerVideo'
-        );
+        video:true
 
-        const stream =
-        await navigator.mediaDevices.getUserMedia({
+    });
 
-            video:{
-                width:640,
-                height:480,
-                facingMode:"user"
-            },
+    const video =
+    document.getElementById(
+        'registerVideo'
+    );
 
-            audio:false
-
-        });
-
-        video.srcObject = stream;
-
-        await video.play();
-
-        alert("Camera Started");
-
-    }catch(error){
-
-        console.log(error);
-
-        alert("Camera Permission Denied");
-
-    }
+    video.srcObject =
+    registerStream;
 
 }
-
-
-// CAPTURE FACE
 
 async function captureFace(){
 
@@ -461,7 +283,15 @@ async function captureFace(){
 
     if(studentId == ''){
 
-        alert("Please Select Student");
+        alert("Select Student");
+
+        return;
+
+    }
+
+    if(capturedDescriptors.length >= 5){
+
+        alert("Maximum 5 Photos Allowed");
 
         return;
 
@@ -500,108 +330,226 @@ async function captureFace(){
 
     }
 
-    const descriptor =
-    Array.from(
-        detection.descriptor
+    capturedDescriptors.push(
+        Array.from(detection.descriptor)
     );
 
-    const response =
-    await fetch('save_face.php',{
+    const canvas =
+    document.createElement('canvas');
 
-        method:'POST',
+    canvas.width = 100;
 
-        headers:{
-            'Content-Type':'application/json'
-        },
+    canvas.height = 100;
 
-        body:JSON.stringify({
+    const ctx =
+    canvas.getContext('2d');
 
-            student_id:studentId,
+    ctx.drawImage(
+        video,
+        0,
+        0,
+        100,
+        100
+    );
 
-            descriptor:descriptor
+    const image =
+    canvas.toDataURL('image/png');
 
-        })
+    capturedImages.push(image);
 
-    });
+    renderCapturedPhotos();
 
-    const result =
-    await response.json();
-
-    if(result.status == 'success'){
-
-        alert("Face Registered Successfully");
-
-        await loadFaces();
-
-    }else{
-
-        alert("Registration Failed");
-
-    }
+    alert(
+        "Captured " +
+        capturedDescriptors.length +
+        "/5"
+    );
 
 }
 
+function renderCapturedPhotos(){
 
-// START ATTENDANCE
+    const container =
+    document.getElementById(
+        'photoContainer'
+    );
 
-async function startAttendance(){
+    container.innerHTML = '';
 
-    if(faceMatcher == null){
+    capturedImages.forEach(img => {
 
-        alert("No Registered Faces");
+        container.innerHTML += `
+
+        <div class="photoBox">
+
+            <img src="${img}">
+
+        </div>
+
+        `;
+
+    });
+
+}
+
+async function saveAllFaces(){
+
+    const studentId =
+    document.getElementById(
+        'studentSelect'
+    ).value;
+
+    if(studentId == ''){
+
+        alert("Select Student");
 
         return;
 
     }
 
-    attendanceRunning = true;
+    if(capturedDescriptors.length < 3){
 
-    const video =
-    document.getElementById('video');
+        alert(
+            "Capture At Least 3 Photos"
+        );
 
-    const stream =
-    await navigator.mediaDevices.getUserMedia({
+        return;
 
-        video:{
-            width:640,
-            height:480,
-            facingMode:"user"
-        },
+    }
 
-        audio:false
+    for(const descriptor of capturedDescriptors){
+
+        await fetch('save_face.php',{
+
+            method:'POST',
+
+            headers:{
+                'Content-Type':'application/json'
+            },
+
+            body:JSON.stringify({
+
+                student_id:studentId,
+
+                descriptor:descriptor
+
+            })
+
+        });
+
+    }
+
+    alert(
+        "Face Registered Successfully"
+    );
+
+    capturedDescriptors = [];
+
+    capturedImages = [];
+
+    document.getElementById(
+        'photoContainer'
+    ).innerHTML = '';
+
+    await loadFaces();
+
+}
+
+async function loadFaces(){
+
+    const response =
+    await fetch('load_faces.php');
+
+    const data =
+    await response.json();
+
+    const grouped = {};
+
+    data.forEach(item => {
+
+        if(!grouped[item.student_id]){
+
+            grouped[item.student_id] = [];
+
+        }
+
+        grouped[item.student_id].push(
+
+            new Float32Array(
+                JSON.parse(item.descriptor)
+            )
+
+        );
 
     });
 
-    video.srcObject = stream;
+    const labeled = [];
 
-    await video.play();
+    for(const studentId in grouped){
+
+        labeled.push(
+
+            new faceapi.LabeledFaceDescriptors(
+
+                studentId,
+
+                grouped[studentId]
+
+            )
+
+        );
+
+    }
+
+    if(labeled.length > 0){
+
+        faceMatcher =
+        new faceapi.FaceMatcher(
+            labeled,
+            0.5
+        );
+
+    }
+
+}
+
+async function startAttendanceCamera(){
+
+    attendanceStream =
+    await navigator.mediaDevices.getUserMedia({
+
+        video:true
+
+    });
+
+    const video =
+    document.getElementById(
+        'attendanceVideo'
+    );
+
+    video.srcObject =
+    attendanceStream;
 
     detectAttendance();
 
 }
 
-
-// DETECT ATTENDANCE
-
 async function detectAttendance(){
 
     const video =
-    document.getElementById('video');
+    document.getElementById(
+        'attendanceVideo'
+    );
 
     const canvas =
-    document.getElementById('overlay');
-
-    canvas.width =
-    video.videoWidth;
-
-    canvas.height =
-    video.videoHeight;
+    document.getElementById(
+        'attendanceCanvas'
+    );
 
     const displaySize = {
 
-        width:video.videoWidth,
-
-        height:video.videoHeight
+        width:video.width,
+        height:video.height
 
     };
 
@@ -610,7 +558,7 @@ async function detectAttendance(){
         displaySize
     );
 
-    while(attendanceRunning){
+    setInterval(async()=>{
 
         const detections =
         await faceapi
@@ -619,13 +567,7 @@ async function detectAttendance(){
 
             video,
 
-            new faceapi.TinyFaceDetectorOptions({
-
-                inputSize:320,
-
-                scoreThreshold:0.5
-
-            })
+            new faceapi.TinyFaceDetectorOptions()
 
         )
 
@@ -639,133 +581,53 @@ async function detectAttendance(){
             displaySize
         );
 
-        const ctx =
-        canvas.getContext('2d');
-
-        ctx.clearRect(
+        canvas
+        .getContext('2d')
+        .clearRect(
             0,
             0,
             canvas.width,
             canvas.height
         );
 
-        resized.forEach(async detection => {
+        resized.forEach(async detection=>{
 
             const result =
             faceMatcher.findBestMatch(
                 detection.descriptor
             );
 
-            const box =
-            detection.detection.box;
-
-            let drawBox;
-
             if(result.label != 'unknown'){
 
-                drawBox =
-                new faceapi.draw.DrawBox(box,{
+                await fetch(
+                    'mark_attendance.php',
+                    {
 
-                    label:
-                    'Student ID : ' +
-                    result.label
+                    method:'POST',
 
-                });
+                    headers:{
+                        'Content-Type':'application/json'
+                    },
 
-                await markAttendance(
-                    result.label
-                );
+                    body:JSON.stringify({
 
-            }else{
+                        student_id:result.label
 
-                drawBox =
-                new faceapi.draw.DrawBox(box,{
-
-                    label:'Unknown'
+                    })
 
                 });
+
+                loadAttendance();
 
             }
 
-            drawBox.draw(canvas);
-
         });
 
-        await new Promise(resolve =>
-            setTimeout(resolve,1000)
-        );
-
-    }
+    },3000);
 
 }
 
-
-// MARK ATTENDANCE
-
-async function markAttendance(studentId){
-
-    if(markedStudents.includes(studentId)){
-
-        return;
-
-    }
-
-    markedStudents.push(studentId);
-
-    const response =
-    await fetch('mark_attendance.php',{
-
-        method:'POST',
-
-        headers:{
-            'Content-Type':'application/json'
-        },
-
-        body:JSON.stringify({
-
-            student_id:studentId
-
-        })
-
-    });
-
-    const result =
-    await response.json();
-
-    const statusBox =
-    document.getElementById(
-        'statusBox'
-    );
-
-    statusBox.style.display =
-    'block';
-
-    if(result.status == 'marked'){
-
-        statusBox.className =
-        'status success';
-
-        statusBox.innerHTML =
-        'Attendance Marked Successfully';
-
-        loadAttendanceLog();
-
-    }else{
-
-        statusBox.className =
-        'status error';
-
-        statusBox.innerHTML =
-        'Attendance Already Marked';
-
-    }
-
-}
-
-
-// LOAD ATTENDANCE LOG
-
-async function loadAttendanceLog(){
+async function loadAttendance(){
 
     const response =
     await fetch(
@@ -775,32 +637,36 @@ async function loadAttendanceLog(){
     const data =
     await response.json();
 
-    const log =
+    const attendanceList =
     document.getElementById(
-        'attendanceLog'
+        'attendanceList'
     );
 
-    log.innerHTML = '';
+    attendanceList.innerHTML = '';
 
-    data.forEach(item => {
+    data.forEach(item=>{
 
-        log.innerHTML += `
+        attendanceList.innerHTML += `
 
-        <div class="log-item">
+        <div class="studentBox">
 
-            <strong>
-                ${item.name}
-            </strong>
+        <h3 class="present">
 
-            <br><br>
+        ${item.name}
 
-            ${item.enrollment_id}
+        </h3>
 
-            <br><br>
+        <p>
 
-            <span class="badge">
-                Present
-            </span>
+        ${item.enrollment_id}
+
+        </p>
+
+        <p>
+
+        ${item.attendance_time}
+
+        </p>
 
         </div>
 
@@ -809,8 +675,6 @@ async function loadAttendanceLog(){
     });
 
 }
-
-loadAttendanceLog();
 
 </script>
 
