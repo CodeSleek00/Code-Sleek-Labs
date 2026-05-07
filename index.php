@@ -8,9 +8,9 @@ include 'db.php';
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>AI Face Attendance System</title>
+<title>AI Face Attendance</title>
 
-<script defer src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
+<script defer src="https://unpkg.com/face-api.js"></script>
 
 <style>
 
@@ -48,6 +48,7 @@ button{
     cursor:pointer;
     font-size:15px;
     margin-top:10px;
+    margin-right:10px;
 }
 
 button:hover{
@@ -66,19 +67,20 @@ select{
 .camera-box{
     position:relative;
     width:100%;
-    max-width:500px;
+    max-width:640px;
     margin-top:20px;
 }
 
 video{
     width:100%;
     border-radius:15px;
+    background:black;
 }
 
 canvas{
     position:absolute;
-    left:0;
     top:0;
+    left:0;
 }
 
 #photoContainer{
@@ -91,8 +93,8 @@ canvas{
 .photoBox{
     width:100px;
     height:100px;
-    border-radius:10px;
     overflow:hidden;
+    border-radius:10px;
     border:2px solid #38bdf8;
 }
 
@@ -124,7 +126,7 @@ canvas{
 
 <div class="card">
 
-<h2>Register Face</h2>
+<h2>Register Student Face</h2>
 
 <select id="studentSelect">
 
@@ -160,10 +162,20 @@ while($row = $students->fetch_assoc()){
 Start Camera
 </button>
 
+<button onclick="captureFace()">
+Capture Photo
+</button>
+
+<button onclick="saveAllFaces()">
+Save Registration
+</button>
+
 <div class="camera-box">
 
 <video
 id="registerVideo"
+width="640"
+height="480"
 autoplay
 muted
 playsinline>
@@ -172,14 +184,6 @@ playsinline>
 <canvas id="registerCanvas"></canvas>
 
 </div>
-
-<button onclick="captureFace()">
-Capture Photo
-</button>
-
-<button onclick="saveAllFaces()">
-Save Registration
-</button>
 
 <div id="photoContainer"></div>
 
@@ -197,6 +201,8 @@ Start Attendance Camera
 
 <video
 id="attendanceVideo"
+width="640"
+height="480"
 autoplay
 muted
 playsinline>
@@ -221,7 +227,7 @@ playsinline>
 <script>
 
 const MODEL_URL =
-'https://cdn.jsdelivr.net/npm/@vladmandic/face-api@latest/model/';
+'https://raw.githubusercontent.com/vladmandic/face-api/master/model/';
 
 let faceMatcher;
 
@@ -235,42 +241,74 @@ let capturedImages = [];
 
 async function loadModels(){
 
-    await Promise.all([
+    try{
 
-        faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL),
+        await Promise.all([
 
-        faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL),
+            faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL),
 
-        faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL)
+            faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL),
 
-    ]);
+            faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL)
 
-    await loadFaces();
+        ]);
 
-    loadAttendance();
+        alert("AI Models Loaded");
 
-    alert("AI Models Loaded");
+        await loadFaces();
+
+        loadAttendance();
+
+    }catch(error){
+
+        console.log(error);
+
+        alert("Model Loading Failed");
+
+    }
 
 }
 
-loadModels();
+window.onload = loadModels;
 
 async function startRegisterCamera(){
 
-    registerStream =
-    await navigator.mediaDevices.getUserMedia({
+    try{
 
-        video:true
+        registerStream =
+        await navigator.mediaDevices.getUserMedia({
 
-    });
+            video:{
+                width:640,
+                height:480,
+                facingMode:'user'
+            }
 
-    const video =
-    document.getElementById(
-        'registerVideo'
-    );
+        });
 
-    video.srcObject =
-    registerStream;
+        const video =
+        document.getElementById(
+            'registerVideo'
+        );
+
+        video.srcObject =
+        registerStream;
+
+        video.onloadedmetadata = ()=>{
+
+            video.play();
+
+            alert("Camera Started");
+
+        };
+
+    }catch(error){
+
+        console.log(error);
+
+        alert("Camera Access Denied");
+
+    }
 
 }
 
@@ -289,6 +327,19 @@ async function captureFace(){
 
     }
 
+    const video =
+    document.getElementById(
+        'registerVideo'
+    );
+
+    if(video.readyState !== 4){
+
+        alert("Camera Not Ready");
+
+        return;
+
+    }
+
     if(capturedDescriptors.length >= 5){
 
         alert("Maximum 5 Photos Allowed");
@@ -297,73 +348,94 @@ async function captureFace(){
 
     }
 
-    const video =
-    document.getElementById(
-        'registerVideo'
-    );
+    try{
 
-    const detection =
-    await faceapi
+        const detection =
+        await faceapi
 
-    .detectSingleFace(
+        .detectSingleFace(
 
-        video,
+            video,
 
-        new faceapi.TinyFaceDetectorOptions({
+            new faceapi.TinyFaceDetectorOptions({
 
-            inputSize:320,
-            scoreThreshold:0.5
+                inputSize:512,
+                scoreThreshold:0.3
 
-        })
+            })
 
-    )
+        )
 
-    .withFaceLandmarks()
+        .withFaceLandmarks()
 
-    .withFaceDescriptor();
+        .withFaceDescriptor();
 
-    if(!detection){
+        if(!detection){
 
-        alert("Face Not Detected");
+            alert("Face Not Detected");
 
-        return;
+            return;
+
+        }
+
+        capturedDescriptors.push(
+
+            Array.from(
+                detection.descriptor
+            )
+
+        );
+
+        const canvas =
+        document.createElement('canvas');
+
+        canvas.width =
+        video.videoWidth;
+
+        canvas.height =
+        video.videoHeight;
+
+        const ctx =
+        canvas.getContext('2d');
+
+        ctx.drawImage(
+
+            video,
+
+            0,
+            0,
+
+            canvas.width,
+            canvas.height
+
+        );
+
+        const image =
+        canvas.toDataURL(
+            'image/png'
+        );
+
+        capturedImages.push(image);
+
+        renderCapturedPhotos();
+
+        alert(
+
+            "Captured " +
+
+            capturedDescriptors.length +
+
+            "/5"
+
+        );
+
+    }catch(error){
+
+        console.log(error);
+
+        alert("Face Detection Failed");
 
     }
-
-    capturedDescriptors.push(
-        Array.from(detection.descriptor)
-    );
-
-    const canvas =
-    document.createElement('canvas');
-
-    canvas.width = 100;
-
-    canvas.height = 100;
-
-    const ctx =
-    canvas.getContext('2d');
-
-    ctx.drawImage(
-        video,
-        0,
-        0,
-        100,
-        100
-    );
-
-    const image =
-    canvas.toDataURL('image/png');
-
-    capturedImages.push(image);
-
-    renderCapturedPhotos();
-
-    alert(
-        "Captured " +
-        capturedDescriptors.length +
-        "/5"
-    );
 
 }
 
@@ -409,9 +481,7 @@ async function saveAllFaces(){
 
     if(capturedDescriptors.length < 3){
 
-        alert(
-            "Capture At Least 3 Photos"
-        );
+        alert("Capture Minimum 3 Photos");
 
         return;
 
@@ -439,9 +509,7 @@ async function saveAllFaces(){
 
     }
 
-    alert(
-        "Face Registered Successfully"
-    );
+    alert("Face Registration Completed");
 
     capturedDescriptors = [];
 
@@ -458,14 +526,16 @@ async function saveAllFaces(){
 async function loadFaces(){
 
     const response =
-    await fetch('load_faces.php');
+    await fetch(
+        'load_faces.php'
+    );
 
     const data =
     await response.json();
 
     const grouped = {};
 
-    data.forEach(item => {
+    data.forEach(item=>{
 
         if(!grouped[item.student_id]){
 
@@ -476,7 +546,11 @@ async function loadFaces(){
         grouped[item.student_id].push(
 
             new Float32Array(
-                JSON.parse(item.descriptor)
+
+                JSON.parse(
+                    item.descriptor
+                )
+
             )
 
         );
@@ -515,22 +589,38 @@ async function loadFaces(){
 
 async function startAttendanceCamera(){
 
-    attendanceStream =
-    await navigator.mediaDevices.getUserMedia({
+    try{
 
-        video:true
+        attendanceStream =
+        await navigator.mediaDevices.getUserMedia({
 
-    });
+            video:true
 
-    const video =
-    document.getElementById(
-        'attendanceVideo'
-    );
+        });
 
-    video.srcObject =
-    attendanceStream;
+        const video =
+        document.getElementById(
+            'attendanceVideo'
+        );
 
-    detectAttendance();
+        video.srcObject =
+        attendanceStream;
+
+        video.onloadedmetadata = ()=>{
+
+            video.play();
+
+            detectAttendance();
+
+        };
+
+    }catch(error){
+
+        console.log(error);
+
+        alert("Camera Access Denied");
+
+    }
 
 }
 
@@ -546,17 +636,11 @@ async function detectAttendance(){
         'attendanceCanvas'
     );
 
-    const displaySize = {
+    canvas.width =
+    video.videoWidth;
 
-        width:video.width,
-        height:video.height
-
-    };
-
-    faceapi.matchDimensions(
-        canvas,
-        displaySize
-    );
+    canvas.height =
+    video.videoHeight;
 
     setInterval(async()=>{
 
@@ -575,26 +659,52 @@ async function detectAttendance(){
 
         .withFaceDescriptors();
 
-        const resized =
-        faceapi.resizeResults(
-            detections,
-            displaySize
-        );
+        const ctx =
+        canvas.getContext('2d');
 
-        canvas
-        .getContext('2d')
-        .clearRect(
+        ctx.clearRect(
+
             0,
             0,
             canvas.width,
             canvas.height
+
         );
 
-        resized.forEach(async detection=>{
+        detections.forEach(async detection=>{
 
             const result =
             faceMatcher.findBestMatch(
                 detection.descriptor
+            );
+
+            const box =
+            detection.detection.box;
+
+            ctx.strokeStyle =
+            '#22c55e';
+
+            ctx.lineWidth = 3;
+
+            ctx.strokeRect(
+
+                box.x,
+                box.y,
+                box.width,
+                box.height
+
+            );
+
+            ctx.fillStyle =
+            '#22c55e';
+
+            ctx.fillText(
+
+                result.label,
+
+                box.x,
+                box.y - 10
+
             );
 
             if(result.label != 'unknown'){
@@ -658,12 +768,14 @@ async function loadAttendance(){
 
         <p>
 
+        Enrollment:
         ${item.enrollment_id}
 
         </p>
 
         <p>
 
+        Time:
         ${item.attendance_time}
 
         </p>
