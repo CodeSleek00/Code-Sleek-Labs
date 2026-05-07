@@ -1,0 +1,1049 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FaceAttend – Smart Attendance System</title>
+<script defer src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap');
+
+  :root {
+    --bg: #0a0d14;
+    --surface: #111621;
+    --surface2: #181e2e;
+    --border: #1e2a42;
+    --accent: #3b82f6;
+    --accent2: #06d6a0;
+    --accent3: #f59e0b;
+    --danger: #ef4444;
+    --text: #e2e8f0;
+    --muted: #64748b;
+    --card: #141a28;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* BG grid */
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background-image:
+      linear-gradient(rgba(59,130,246,0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(59,130,246,0.04) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none; z-index: 0;
+  }
+
+  /* ── HEADER ── */
+  header {
+    position: sticky; top: 0; z-index: 100;
+    background: rgba(10,13,20,0.85);
+    backdrop-filter: blur(16px);
+    border-bottom: 1px solid var(--border);
+    padding: 0 2rem;
+    display: flex; align-items: center; justify-content: space-between;
+    height: 64px;
+  }
+
+  .logo {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800; font-size: 1.4rem;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    letter-spacing: -0.5px;
+  }
+
+  .logo span { font-weight: 400; }
+
+  #model-status {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.72rem; color: var(--muted);
+    display: flex; align-items: center; gap: 6px;
+  }
+
+  .dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--muted);
+    transition: background 0.4s;
+  }
+  .dot.ready { background: var(--accent2); box-shadow: 0 0 8px var(--accent2); animation: pulse 2s infinite; }
+  .dot.loading { background: var(--accent3); animation: blink 0.8s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.5} }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.2} }
+
+  /* ── NAV TABS ── */
+  nav {
+    display: flex; gap: 0;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 0 2rem;
+    position: relative; z-index: 10;
+  }
+
+  nav button {
+    background: none; border: none; cursor: pointer;
+    color: var(--muted);
+    font-family: 'Syne', sans-serif; font-size: 0.82rem; font-weight: 600;
+    padding: 14px 20px;
+    border-bottom: 2px solid transparent;
+    transition: all 0.2s; letter-spacing: 0.5px; text-transform: uppercase;
+  }
+
+  nav button:hover { color: var(--text); }
+  nav button.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+  /* ── MAIN ── */
+  main { position: relative; z-index: 1; padding: 2rem; max-width: 1200px; margin: 0 auto; }
+
+  .page { display: none; animation: fadeIn 0.3s ease; }
+  .page.active { display: block; }
+  @keyframes fadeIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+
+  /* ── CARDS ── */
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .card-title {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700; font-size: 1rem;
+    margin-bottom: 1rem;
+    display: flex; align-items: center; gap: 8px;
+  }
+
+  /* ── INPUTS ── */
+  input[type=text], input[type=date], select {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif; font-size: 0.9rem;
+    padding: 10px 14px;
+    width: 100%; outline: none;
+    transition: border-color 0.2s;
+  }
+  input:focus, select:focus { border-color: var(--accent); }
+
+  label { display: block; font-size: 0.78rem; color: var(--muted); margin-bottom: 6px; letter-spacing: 0.3px; }
+
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem; }
+  .form-group { margin-bottom: 1rem; }
+
+  /* ── BUTTONS ── */
+  .btn {
+    border: none; border-radius: 10px; cursor: pointer;
+    font-family: 'Syne', sans-serif; font-weight: 600; font-size: 0.82rem;
+    padding: 10px 20px; letter-spacing: 0.3px;
+    transition: all 0.2s; display: inline-flex; align-items: center; gap: 6px;
+  }
+  .btn-primary { background: var(--accent); color: #fff; }
+  .btn-primary:hover { background: #2563eb; transform: translateY(-1px); box-shadow: 0 4px 16px rgba(59,130,246,0.35); }
+  .btn-success { background: var(--accent2); color: #000; }
+  .btn-success:hover { background: #00c78d; transform: translateY(-1px); }
+  .btn-danger { background: var(--danger); color: #fff; }
+  .btn-danger:hover { background: #dc2626; }
+  .btn-ghost { background: var(--surface2); color: var(--text); border: 1px solid var(--border); }
+  .btn-ghost:hover { background: var(--border); }
+  .btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none !important; }
+
+  /* ── CAMERA ── */
+  .camera-wrap {
+    position: relative; display: inline-block;
+    border-radius: 16px; overflow: hidden;
+    border: 2px solid var(--border);
+    background: #000;
+    width: 100%; max-width: 480px;
+  }
+
+  #video, #regVideo {
+    display: block; width: 100%;
+    border-radius: 14px;
+  }
+
+  .canvas-overlay {
+    position: absolute; top: 0; left: 0;
+    border-radius: 14px;
+    pointer-events: none;
+  }
+
+  .camera-controls { display: flex; gap: 10px; margin-top: 10px; flex-wrap: wrap; }
+
+  /* ── STUDENT TABLE ── */
+  .table-wrap { overflow-x: auto; border-radius: 12px; border: 1px solid var(--border); }
+
+  table { width: 100%; border-collapse: collapse; }
+  th {
+    background: var(--surface2);
+    font-family: 'DM Mono', monospace; font-size: 0.72rem;
+    color: var(--muted); text-transform: uppercase; letter-spacing: 1px;
+    padding: 12px 16px; text-align: left;
+  }
+  td { padding: 12px 16px; font-size: 0.88rem; border-top: 1px solid var(--border); }
+  tr:hover td { background: rgba(59,130,246,0.04); }
+
+  .badge {
+    display: inline-block; padding: 3px 10px; border-radius: 20px;
+    font-size: 0.72rem; font-weight: 600; letter-spacing: 0.3px;
+  }
+  .badge-present { background: rgba(6,214,160,0.15); color: var(--accent2); }
+  .badge-absent  { background: rgba(239,68,68,0.12);  color: var(--danger); }
+  .badge-reg     { background: rgba(59,130,246,0.15); color: var(--accent); }
+  .badge-noreg   { background: rgba(100,116,139,0.15); color: var(--muted); }
+
+  /* ── SCAN RESULT ── */
+  #scanResult {
+    margin-top: 1rem; padding: 14px 18px; border-radius: 12px;
+    font-family: 'Syne', sans-serif; font-size: 1rem; font-weight: 700;
+    display: none;
+  }
+  #scanResult.success { background: rgba(6,214,160,0.12); border: 1px solid var(--accent2); color: var(--accent2); }
+  #scanResult.error   { background: rgba(239,68,68,0.1);  border: 1px solid var(--danger); color: var(--danger); }
+  #scanResult.info    { background: rgba(59,130,246,0.1); border: 1px solid var(--accent); color: var(--accent); }
+
+  /* ── STATS ── */
+  .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 1rem; margin-bottom: 1.5rem; }
+  .stat-card {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 14px; padding: 1.2rem;
+    text-align: center;
+  }
+  .stat-num { font-family: 'Syne', sans-serif; font-size: 2rem; font-weight: 800; line-height: 1; }
+  .stat-label { font-size: 0.75rem; color: var(--muted); margin-top: 4px; text-transform: uppercase; letter-spacing: 0.5px; }
+
+  /* ── REGISTRATION PHOTOS ── */
+  #photoStrip { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+  .photo-thumb { width: 70px; height: 70px; border-radius: 8px; object-fit: cover; border: 2px solid var(--border); }
+  .photo-thumb.captured { border-color: var(--accent2); }
+
+  /* ── FACE BOX ── */
+  .face-box-label {
+    font-family: 'DM Mono', monospace; font-size: 0.65rem;
+    fill: #fff; dominant-baseline: hanging;
+  }
+
+  /* ── ATTENDANCE LOG ── */
+  #attendanceLog { max-height: 280px; overflow-y: auto; }
+
+  /* ── TOAST ── */
+  #toast {
+    position: fixed; bottom: 24px; right: 24px; z-index: 9999;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 12px; padding: 14px 20px;
+    font-size: 0.88rem; min-width: 240px;
+    transform: translateY(80px); opacity: 0;
+    transition: all 0.3s; pointer-events: none;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+  }
+  #toast.show { transform: translateY(0); opacity: 1; }
+
+  /* ── LOADING OVERLAY ── */
+  #loadingOverlay {
+    position: fixed; inset: 0; z-index: 9000;
+    background: var(--bg);
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 20px;
+  }
+  .spinner {
+    width: 48px; height: 48px; border-radius: 50%;
+    border: 3px solid var(--border);
+    border-top-color: var(--accent);
+    animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .loading-text { font-family: 'Syne', sans-serif; font-size: 1rem; color: var(--muted); }
+
+  /* ── DATE FILTER ── */
+  .filter-row { display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap; margin-bottom: 1rem; }
+  .filter-row .form-group { margin-bottom: 0; min-width: 160px; }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 640px) {
+    main { padding: 1rem; }
+    .form-row { grid-template-columns: 1fr; }
+    nav button { padding: 12px 12px; font-size: 0.72rem; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Loading Overlay -->
+<div id="loadingOverlay">
+  <div class="spinner"></div>
+  <div class="loading-text">Loading AI Face Models…</div>
+  <div style="font-size:0.75rem;color:var(--muted);font-family:'DM Mono',monospace">This may take 30–60 seconds on first load</div>
+</div>
+
+<!-- Toast -->
+<div id="toast"></div>
+
+<!-- Header -->
+<header>
+  <div class="logo">Face<span>Attend</span></div>
+  <div id="model-status"><div class="dot loading" id="statusDot"></div><span id="statusText">Loading models…</span></div>
+</header>
+
+<!-- Nav -->
+<nav>
+  <button class="active" onclick="showPage('dashboard')">📊 Dashboard</button>
+  <button onclick="showPage('students')">👥 Students</button>
+  <button onclick="showPage('register')">📷 Register Face</button>
+  <button onclick="showPage('attendance')">✅ Take Attendance</button>
+  <button onclick="showPage('report')">📋 Report</button>
+</nav>
+
+<main>
+
+<!-- ══════════════ DASHBOARD ══════════════ -->
+<div id="page-dashboard" class="page active">
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-num" id="stat-total" style="color:var(--accent)">0</div>
+      <div class="stat-label">Total Students</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-num" id="stat-registered" style="color:var(--accent2)">0</div>
+      <div class="stat-label">Face Registered</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-num" id="stat-today" style="color:var(--accent3)">0</div>
+      <div class="stat-label">Present Today</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-num" id="stat-absent" style="color:var(--danger)">0</div>
+      <div class="stat-label">Absent Today</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">📋 Today's Attendance — <span id="todayDate" style="color:var(--muted);font-weight:400"></span></div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>#</th><th>Name</th><th>Roll No</th><th>Class</th><th>Status</th><th>Time</th></tr></thead>
+        <tbody id="dashboardTable"><tr><td colspan="6" style="text-align:center;color:var(--muted);padding:2rem">No students yet</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════ STUDENTS ══════════════ -->
+<div id="page-students" class="page">
+  <div class="card">
+    <div class="card-title">➕ Add New Student</div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Student Name *</label>
+        <input type="text" id="sName" placeholder="e.g. Rahul Kumar">
+      </div>
+      <div class="form-group">
+        <label>Roll Number *</label>
+        <input type="text" id="sRoll" placeholder="e.g. CS-2024-001">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Class / Section</label>
+        <input type="text" id="sClass" placeholder="e.g. 10-A">
+      </div>
+      <div class="form-group">
+        <label>Phone (optional)</label>
+        <input type="text" id="sPhone" placeholder="e.g. 9876543210">
+      </div>
+    </div>
+    <button class="btn btn-primary" onclick="addStudent()">➕ Add Student</button>
+  </div>
+
+  <div class="card">
+    <div class="card-title">👥 Student Database</div>
+    <div style="margin-bottom:1rem">
+      <input type="text" id="searchInput" placeholder="🔍  Search by name or roll number…" oninput="renderStudents()">
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>#</th><th>Name</th><th>Roll No</th><th>Class</th><th>Face</th><th>Actions</th></tr></thead>
+        <tbody id="studentsTable"><tr><td colspan="6" style="text-align:center;color:var(--muted);padding:2rem">No students added yet</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════ REGISTER FACE ══════════════ -->
+<div id="page-register" class="page">
+  <div class="card">
+    <div class="card-title">👤 Select Student to Register</div>
+    <div class="form-group">
+      <label>Choose Student</label>
+      <select id="regStudentSelect">
+        <option value="">-- Select a student --</option>
+      </select>
+    </div>
+
+    <div id="regCamera" style="display:none">
+      <div style="display:flex;gap:2rem;flex-wrap:wrap;align-items:flex-start">
+        <div>
+          <div class="camera-wrap">
+            <video id="regVideo" autoplay playsinline muted></video>
+            <canvas id="regCanvas" class="canvas-overlay"></canvas>
+          </div>
+          <div class="camera-controls">
+            <button class="btn btn-success" onclick="capturePhoto()" id="captureBtn">📸 Capture Photo</button>
+            <button class="btn btn-primary" onclick="saveRegistration()" id="saveRegBtn" disabled>💾 Save Registration</button>
+            <button class="btn btn-ghost" onclick="resetReg()">✖ Cancel</button>
+          </div>
+          <div style="margin-top:10px;font-size:0.78rem;color:var(--muted)">Capture 3–5 clear photos of the student's face</div>
+        </div>
+        <div>
+          <div style="font-size:0.78rem;color:var(--muted);margin-bottom:8px">Captured Photos</div>
+          <div id="photoStrip"></div>
+          <div id="captureCount" style="margin-top:8px;font-family:'DM Mono',monospace;font-size:0.78rem;color:var(--muted)">0 / 5 captured</div>
+        </div>
+      </div>
+    </div>
+
+    <div id="regPrompt" style="padding:2rem;text-align:center;color:var(--muted)">
+      Select a student above to begin face registration
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════ TAKE ATTENDANCE ══════════════ -->
+<div id="page-attendance" class="page">
+  <div class="card">
+    <div class="card-title">📅 Attendance Session</div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Date</label>
+        <input type="date" id="attDate">
+      </div>
+      <div class="form-group">
+        <label>Session / Subject (optional)</label>
+        <input type="text" id="attSession" placeholder="e.g. Mathematics, Morning">
+      </div>
+    </div>
+    <button class="btn btn-primary" onclick="startAttendance()" id="startAttBtn">▶ Start Camera</button>
+    <button class="btn btn-danger" onclick="stopAttendance()" id="stopAttBtn" style="display:none">⏹ Stop Camera</button>
+  </div>
+
+  <div id="attCameraSection" style="display:none">
+    <div style="display:flex;gap:2rem;flex-wrap:wrap;align-items:flex-start">
+      <div>
+        <div class="camera-wrap" style="max-width:520px">
+          <video id="video" autoplay playsinline muted></video>
+          <canvas id="overlay" class="canvas-overlay"></canvas>
+        </div>
+        <div id="scanResult"></div>
+      </div>
+      <div style="flex:1;min-width:240px">
+        <div class="card" style="margin-bottom:0">
+          <div class="card-title">✅ Marked Today</div>
+          <div id="attendanceLog" style="max-height:320px;overflow-y:auto">
+            <div style="text-align:center;color:var(--muted);padding:2rem;font-size:0.85rem">No attendance marked yet</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════ REPORT ══════════════ -->
+<div id="page-report" class="page">
+  <div class="card">
+    <div class="card-title">📋 Attendance Report</div>
+    <div class="filter-row">
+      <div class="form-group">
+        <label>From Date</label>
+        <input type="date" id="repFrom">
+      </div>
+      <div class="form-group">
+        <label>To Date</label>
+        <input type="date" id="repTo">
+      </div>
+      <button class="btn btn-primary" onclick="generateReport()">🔍 Generate</button>
+      <button class="btn btn-ghost" onclick="exportCSV()">⬇ Export CSV</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">📊 Results</div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Name</th><th>Roll No</th><th>Class</th><th>Days Present</th><th>Days Absent</th><th>%</th></tr></thead>
+        <tbody id="reportTable"><tr><td colspan="6" style="text-align:center;color:var(--muted);padding:2rem">Select a date range and click Generate</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">📆 Daily Log</div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Date</th><th>Name</th><th>Roll No</th><th>Status</th><th>Time</th><th>Session</th></tr></thead>
+        <tbody id="dailyLogTable"><tr><td colspan="6" style="text-align:center;color:var(--muted);padding:2rem">—</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+</main>
+
+<script>
+/* ════════════════════════════════════════════════
+   DATA STORE (localStorage)
+   ════════════════════════════════════════════════ */
+const DB = {
+  get students()   { return JSON.parse(localStorage.getItem('fa_students')  || '[]'); },
+  get attendance() { return JSON.parse(localStorage.getItem('fa_attendance')|| '[]'); },
+  get descriptors(){ return JSON.parse(localStorage.getItem('fa_descriptors')|| '{}'); },
+  saveStudents(d)    { localStorage.setItem('fa_students',   JSON.stringify(d)); },
+  saveAttendance(d)  { localStorage.setItem('fa_attendance', JSON.stringify(d)); },
+  saveDescriptors(d) { localStorage.setItem('fa_descriptors',JSON.stringify(d)); }
+};
+
+/* ════════════════════════════════════════════════
+   MODEL LOADING
+   MODEL FILES ARE LOADED FROM jsDelivr CDN
+   ════════════════════════════════════════════════ */
+const MODEL_URL = 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api/model';
+let modelsReady = false;
+let faceMatcher = null;
+
+async function loadModels() {
+  try {
+    await Promise.all([
+      faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL),
+      faceapi.nets.faceLandmark68TinyNet.loadFromUri(MODEL_URL),
+      faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL),
+    ]);
+    modelsReady = true;
+    document.getElementById('statusDot').className = 'dot ready';
+    document.getElementById('statusText').textContent = 'AI Ready';
+    document.getElementById('loadingOverlay').style.display = 'none';
+    buildFaceMatcher();
+    refreshDashboard();
+    showToast('✅ Face AI models loaded successfully!', 4000);
+  } catch (e) {
+    document.getElementById('statusText').textContent = 'Model error';
+    document.getElementById('loadingOverlay').style.display = 'none';
+    showToast('⚠️ Model load issue. Check internet connection.', 6000);
+    console.error(e);
+  }
+}
+
+function buildFaceMatcher() {
+  const raw = DB.descriptors;
+  const labeled = [];
+  for (const [id, arrays] of Object.entries(raw)) {
+    const student = DB.students.find(s => s.id === id);
+    if (!student || !arrays.length) continue;
+    const descs = arrays.map(a => new Float32Array(a));
+    labeled.push(new faceapi.LabeledFaceDescriptors(id, descs));
+  }
+  faceMatcher = labeled.length ? new faceapi.FaceMatcher(labeled, 0.52) : null;
+}
+
+/* ════════════════════════════════════════════════
+   PAGE NAVIGATION
+   ════════════════════════════════════════════════ */
+function showPage(name) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+  document.getElementById('page-' + name).classList.add('active');
+  event.currentTarget.classList.add('active');
+
+  if (name === 'students')   { renderStudents(); }
+  if (name === 'register')   { populateRegSelect(); }
+  if (name === 'dashboard')  { refreshDashboard(); }
+  if (name === 'report')     { setDefaultDates(); }
+  if (name !== 'attendance') { stopAttendance(); }
+}
+
+/* ════════════════════════════════════════════════
+   TOAST
+   ════════════════════════════════════════════════ */
+let toastTimer;
+function showToast(msg, dur = 3000) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), dur);
+}
+
+/* ════════════════════════════════════════════════
+   STUDENTS
+   ════════════════════════════════════════════════ */
+function addStudent() {
+  const name  = document.getElementById('sName').value.trim();
+  const roll  = document.getElementById('sRoll').value.trim();
+  const cls   = document.getElementById('sClass').value.trim();
+  const phone = document.getElementById('sPhone').value.trim();
+
+  if (!name || !roll) { showToast('❌ Name and Roll Number are required'); return; }
+
+  const students = DB.students;
+  if (students.find(s => s.roll === roll)) { showToast('❌ Roll number already exists'); return; }
+
+  const student = { id: 'stu_' + Date.now(), name, roll, cls, phone, createdAt: new Date().toISOString() };
+  students.push(student);
+  DB.saveStudents(students);
+
+  document.getElementById('sName').value = '';
+  document.getElementById('sRoll').value = '';
+  document.getElementById('sClass').value = '';
+  document.getElementById('sPhone').value = '';
+
+  renderStudents();
+  refreshDashboard();
+  showToast('✅ Student added: ' + name);
+}
+
+function deleteStudent(id) {
+  if (!confirm('Delete this student? This also removes face data.')) return;
+  const students = DB.students.filter(s => s.id !== id);
+  DB.saveStudents(students);
+  const desc = DB.descriptors;
+  delete desc[id];
+  DB.saveDescriptors(desc);
+  buildFaceMatcher();
+  renderStudents();
+  refreshDashboard();
+  showToast('🗑 Student deleted');
+}
+
+function renderStudents() {
+  const query = (document.getElementById('searchInput')?.value || '').toLowerCase();
+  const students = DB.students.filter(s =>
+    s.name.toLowerCase().includes(query) || s.roll.toLowerCase().includes(query)
+  );
+  const desc = DB.descriptors;
+  const tbody = document.getElementById('studentsTable');
+
+  if (!students.length) {
+    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:2rem">No students found</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = students.map((s, i) => `
+    <tr>
+      <td><span style="font-family:'DM Mono',monospace;color:var(--muted)">${i+1}</span></td>
+      <td><strong>${s.name}</strong></td>
+      <td><span style="font-family:'DM Mono',monospace">${s.roll}</span></td>
+      <td>${s.cls || '—'}</td>
+      <td>
+        ${desc[s.id]?.length
+          ? `<span class="badge badge-reg">✓ Registered (${desc[s.id].length} photos)</span>`
+          : `<span class="badge badge-noreg">Not Registered</span>`}
+      </td>
+      <td style="display:flex;gap:6px;flex-wrap:wrap">
+        <button class="btn btn-ghost" style="padding:6px 12px;font-size:0.75rem" onclick="goRegister('${s.id}')">📷 Register</button>
+        <button class="btn btn-danger" style="padding:6px 12px;font-size:0.75rem" onclick="deleteStudent('${s.id}')">🗑</button>
+      </td>
+    </tr>
+  `).join('');
+}
+
+function goRegister(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+  document.getElementById('page-register').classList.add('active');
+  document.querySelectorAll('nav button')[2].classList.add('active');
+  populateRegSelect();
+  document.getElementById('regStudentSelect').value = id;
+  startRegCamera();
+}
+
+/* ════════════════════════════════════════════════
+   FACE REGISTRATION
+   ════════════════════════════════════════════════ */
+let regStream = null;
+let capturedDescriptors = [];
+let capturedCount = 0;
+const MAX_PHOTOS = 5;
+
+function populateRegSelect() {
+  const sel = document.getElementById('regStudentSelect');
+  const students = DB.students;
+  sel.innerHTML = '<option value="">-- Select a student --</option>' +
+    students.map(s => `<option value="${s.id}">${s.name} (${s.roll})</option>`).join('');
+  sel.onchange = () => { if (sel.value) startRegCamera(); else resetReg(); };
+}
+
+async function startRegCamera() {
+  if (!modelsReady) { showToast('⏳ AI models still loading, please wait…'); return; }
+  resetReg(false);
+  document.getElementById('regPrompt').style.display = 'none';
+  document.getElementById('regCamera').style.display = 'block';
+
+  try {
+    regStream = await navigator.mediaDevices.getUserMedia({ video: { width:640, height:480, facingMode:'user' } });
+    const vid = document.getElementById('regVideo');
+    vid.srcObject = regStream;
+    await vid.play();
+    requestAnimationFrame(regDetectLoop);
+  } catch(e) {
+    showToast('❌ Camera access denied. Please allow camera.');
+    document.getElementById('regCamera').style.display = 'none';
+    document.getElementById('regPrompt').style.display = 'block';
+  }
+}
+
+let regLoopRunning = true;
+async function regDetectLoop() {
+  if (!regStream) return;
+  const vid = document.getElementById('regVideo');
+  const canvas = document.getElementById('regCanvas');
+  if (vid.readyState < 2) { requestAnimationFrame(regDetectLoop); return; }
+
+  canvas.width = vid.videoWidth;
+  canvas.height = vid.videoHeight;
+
+  const det = await faceapi.detectSingleFace(vid, new faceapi.TinyFaceDetectorOptions())
+                           .withFaceLandmarks(true).withFaceDescriptor();
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  if (det) {
+    const { x, y, width, height } = det.detection.box;
+    ctx.strokeStyle = '#06d6a0';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(x, y, width, height);
+    ctx.fillStyle = 'rgba(6,214,160,0.15)';
+    ctx.fillRect(x, y, width, height);
+    ctx.fillStyle = '#06d6a0';
+    ctx.font = '12px DM Mono, monospace';
+    ctx.fillText('✓ Face detected', x, y - 6);
+  }
+
+  if (regStream) requestAnimationFrame(regDetectLoop);
+}
+
+async function capturePhoto() {
+  if (capturedCount >= MAX_PHOTOS) { showToast('Maximum 5 photos reached'); return; }
+  const vid = document.getElementById('regVideo');
+  const det = await faceapi.detectSingleFace(vid, new faceapi.TinyFaceDetectorOptions())
+                           .withFaceLandmarks(true).withFaceDescriptor();
+  if (!det) { showToast('❌ No face detected. Please center your face.'); return; }
+
+  capturedDescriptors.push(Array.from(det.descriptor));
+  capturedCount++;
+
+  // Thumbnail
+  const snap = document.createElement('canvas');
+  snap.width = vid.videoWidth; snap.height = vid.videoHeight;
+  snap.getContext('2d').drawImage(vid, 0, 0);
+  const img = document.createElement('img');
+  img.src = snap.toDataURL('image/jpeg', 0.6);
+  img.className = 'photo-thumb captured';
+  document.getElementById('photoStrip').appendChild(img);
+  document.getElementById('captureCount').textContent = capturedCount + ' / ' + MAX_PHOTOS + ' captured';
+
+  if (capturedCount >= 3) document.getElementById('saveRegBtn').disabled = false;
+  showToast(`📸 Photo ${capturedCount} captured!`);
+}
+
+function saveRegistration() {
+  const id = document.getElementById('regStudentSelect').value;
+  if (!id || capturedDescriptors.length < 3) { showToast('❌ Need at least 3 photos'); return; }
+
+  const desc = DB.descriptors;
+  desc[id] = capturedDescriptors;
+  DB.saveDescriptors(desc);
+  buildFaceMatcher();
+
+  const student = DB.students.find(s => s.id === id);
+  showToast(`✅ Face registered for ${student?.name}!`);
+  resetReg();
+  renderStudents();
+}
+
+function resetReg(showPrompt = true) {
+  if (regStream) { regStream.getTracks().forEach(t => t.stop()); regStream = null; }
+  capturedDescriptors = [];
+  capturedCount = 0;
+  document.getElementById('photoStrip').innerHTML = '';
+  document.getElementById('captureCount').textContent = '0 / 5 captured';
+  document.getElementById('saveRegBtn').disabled = true;
+  if (showPrompt) {
+    document.getElementById('regCamera').style.display = 'none';
+    document.getElementById('regPrompt').style.display = 'block';
+    document.getElementById('regStudentSelect').value = '';
+  }
+}
+
+/* ════════════════════════════════════════════════
+   ATTENDANCE TAKING
+   ════════════════════════════════════════════════ */
+let attStream = null;
+let attRunning = false;
+let markedToday = new Set();
+const COOLDOWN_MS = 4000;
+let lastMarked = {};
+
+async function startAttendance() {
+  if (!modelsReady) { showToast('⏳ AI models still loading…'); return; }
+  if (!faceMatcher) { showToast('❌ No faces registered yet. Register students first.'); return; }
+
+  const dateVal = document.getElementById('attDate').value;
+  if (!dateVal) { showToast('❌ Please select a date'); return; }
+
+  // Pre-load today's marked
+  const att = DB.attendance;
+  const todayRecords = att.filter(a => a.date === dateVal);
+  markedToday = new Set(todayRecords.map(a => a.studentId));
+  renderAttLog(dateVal);
+
+  document.getElementById('attCameraSection').style.display = 'block';
+  document.getElementById('startAttBtn').style.display = 'none';
+  document.getElementById('stopAttBtn').style.display = 'inline-flex';
+  attRunning = true;
+
+  try {
+    attStream = await navigator.mediaDevices.getUserMedia({ video: { width:640, height:480, facingMode:'user' } });
+    const vid = document.getElementById('video');
+    vid.srcObject = attStream;
+    await vid.play();
+    attDetectLoop();
+  } catch(e) {
+    showToast('❌ Camera access denied');
+    stopAttendance();
+  }
+}
+
+async function attDetectLoop() {
+  if (!attRunning) return;
+  const vid = document.getElementById('video');
+  const canvas = document.getElementById('overlay');
+  if (vid.readyState < 2) { setTimeout(attDetectLoop, 200); return; }
+
+  canvas.width = vid.videoWidth;
+  canvas.height = vid.videoHeight;
+
+  const detections = await faceapi.detectAllFaces(vid, new faceapi.TinyFaceDetectorOptions({ scoreThreshold: 0.5 }))
+                                  .withFaceLandmarks(true).withFaceDescriptors();
+
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  const dateVal = document.getElementById('attDate').value;
+  const session = document.getElementById('attSession').value.trim();
+
+  for (const det of detections) {
+    const { x, y, width, height } = det.detection.box;
+    const result = faceMatcher.findBestMatch(det.descriptor);
+    const isUnknown = result.label === 'unknown';
+    const student = !isUnknown ? DB.students.find(s => s.id === result.label) : null;
+
+    const now = Date.now();
+    const color = isUnknown ? '#ef4444' : '#06d6a0';
+    const label = isUnknown ? '? Unknown' : (student?.name || 'Unknown');
+
+    // Draw box
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 2;
+    ctx.strokeRect(x, y, width, height);
+    ctx.fillStyle = color + '22';
+    ctx.fillRect(x, y, width, height);
+
+    // Label background
+    const lblW = ctx.measureText(label).width + 16;
+    ctx.fillStyle = color;
+    ctx.fillRect(x, y - 24, lblW, 22);
+    ctx.fillStyle = '#fff';
+    ctx.font = '11px DM Mono, monospace';
+    ctx.fillText(label, x + 8, y - 7);
+
+    // Mark attendance
+    if (!isUnknown && student && !markedToday.has(student.id)) {
+      if (!lastMarked[student.id] || now - lastMarked[student.id] > COOLDOWN_MS) {
+        lastMarked[student.id] = now;
+        markAttendance(student, dateVal, session);
+      }
+    }
+  }
+
+  if (attRunning) setTimeout(attDetectLoop, 400);
+}
+
+function markAttendance(student, date, session) {
+  const att = DB.attendance;
+  const time = new Date().toLocaleTimeString('en-IN', { hour:'2-digit', minute:'2-digit' });
+  att.push({ studentId: student.id, name: student.name, roll: student.roll,
+             cls: student.cls, date, session, time, status: 'present' });
+  DB.saveAttendance(att);
+  markedToday.add(student.id);
+  renderAttLog(date);
+  refreshDashboard();
+
+  // Flash result
+  const res = document.getElementById('scanResult');
+  res.textContent = `✅ ${student.name} (${student.roll}) — Attendance Marked!`;
+  res.className = 'success';
+  res.style.display = 'block';
+  setTimeout(() => res.style.display = 'none', 3000);
+  showToast(`✅ ${student.name} marked present`, 2500);
+}
+
+function renderAttLog(date) {
+  const records = DB.attendance.filter(a => a.date === date);
+  const log = document.getElementById('attendanceLog');
+  if (!records.length) {
+    log.innerHTML = `<div style="text-align:center;color:var(--muted);padding:2rem;font-size:0.85rem">No attendance marked yet</div>`;
+    return;
+  }
+  log.innerHTML = records.map(r => `
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border)">
+      <div>
+        <div style="font-weight:500;font-size:0.88rem">${r.name}</div>
+        <div style="font-size:0.74rem;color:var(--muted);font-family:'DM Mono',monospace">${r.roll}</div>
+      </div>
+      <div style="text-align:right">
+        <span class="badge badge-present">✓ Present</span>
+        <div style="font-size:0.72rem;color:var(--muted);margin-top:3px">${r.time}</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function stopAttendance() {
+  attRunning = false;
+  if (attStream) { attStream.getTracks().forEach(t => t.stop()); attStream = null; }
+  document.getElementById('attCameraSection').style.display = 'none';
+  document.getElementById('startAttBtn').style.display = 'inline-flex';
+  document.getElementById('stopAttBtn').style.display = 'none';
+  const canvas = document.getElementById('overlay');
+  if (canvas) canvas.getContext('2d')?.clearRect(0, 0, canvas.width, canvas.height);
+}
+
+/* ════════════════════════════════════════════════
+   DASHBOARD
+   ════════════════════════════════════════════════ */
+function refreshDashboard() {
+  const today = new Date().toISOString().split('T')[0];
+  document.getElementById('todayDate').textContent = new Date().toLocaleDateString('en-IN', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
+
+  const students = DB.students;
+  const desc = DB.descriptors;
+  const att = DB.attendance;
+  const todayAtt = att.filter(a => a.date === today);
+  const presentIds = new Set(todayAtt.map(a => a.studentId));
+
+  document.getElementById('stat-total').textContent = students.length;
+  document.getElementById('stat-registered').textContent = Object.keys(desc).filter(k => desc[k]?.length).length;
+  document.getElementById('stat-today').textContent = presentIds.size;
+  document.getElementById('stat-absent').textContent = students.length - presentIds.size;
+
+  const tbody = document.getElementById('dashboardTable');
+  if (!students.length) {
+    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:2rem">No students yet. Add students first.</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = students.map((s, i) => {
+    const rec = todayAtt.find(a => a.studentId === s.id);
+    return `<tr>
+      <td><span style="font-family:'DM Mono',monospace;color:var(--muted)">${i+1}</span></td>
+      <td><strong>${s.name}</strong></td>
+      <td><span style="font-family:'DM Mono',monospace">${s.roll}</span></td>
+      <td>${s.cls || '—'}</td>
+      <td>${rec ? '<span class="badge badge-present">✓ Present</span>' : '<span class="badge badge-absent">✗ Absent</span>'}</td>
+      <td style="font-family:'DM Mono',monospace;font-size:0.8rem">${rec?.time || '—'}</td>
+    </tr>`;
+  }).join('');
+}
+
+/* ════════════════════════════════════════════════
+   REPORT
+   ════════════════════════════════════════════════ */
+function setDefaultDates() {
+  const today = new Date().toISOString().split('T')[0];
+  const monthStart = today.slice(0, 8) + '01';
+  document.getElementById('repFrom').value = monthStart;
+  document.getElementById('repTo').value = today;
+}
+
+function generateReport() {
+  const from = document.getElementById('repFrom').value;
+  const to   = document.getElementById('repTo').value;
+  if (!from || !to) { showToast('Select date range'); return; }
+
+  const students = DB.students;
+  const att = DB.attendance.filter(a => a.date >= from && a.date <= to);
+
+  // Count days in range
+  const days = [];
+  let cur = new Date(from);
+  const end = new Date(to);
+  while (cur <= end) { days.push(cur.toISOString().split('T')[0]); cur.setDate(cur.getDate()+1); }
+
+  const tbody = document.getElementById('reportTable');
+  if (!students.length) { tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:2rem">No students</td></tr>`; return; }
+
+  tbody.innerHTML = students.map(s => {
+    const present = att.filter(a => a.studentId === s.id).length;
+    const total = days.length;
+    const absent = total - present;
+    const pct = total ? Math.round(present / total * 100) : 0;
+    const color = pct >= 75 ? 'var(--accent2)' : pct >= 50 ? 'var(--accent3)' : 'var(--danger)';
+    return `<tr>
+      <td><strong>${s.name}</strong></td>
+      <td><span style="font-family:'DM Mono',monospace">${s.roll}</span></td>
+      <td>${s.cls || '—'}</td>
+      <td style="color:var(--accent2);font-weight:600">${present}</td>
+      <td style="color:var(--danger);font-weight:600">${absent}</td>
+      <td><span style="color:${color};font-weight:700;font-family:'Syne',sans-serif">${pct}%</span></td>
+    </tr>`;
+  }).join('');
+
+  // Daily log
+  const log = document.getElementById('dailyLogTable');
+  const filtered = DB.attendance.filter(a => a.date >= from && a.date <= to).sort((a,b) => b.date.localeCompare(a.date));
+  if (!filtered.length) {
+    log.innerHTML = `<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:2rem">No records</td></tr>`;
+  } else {
+    log.innerHTML = filtered.map(r => `<tr>
+      <td><span style="font-family:'DM Mono',monospace">${r.date}</span></td>
+      <td>${r.name}</td>
+      <td><span style="font-family:'DM Mono',monospace">${r.roll}</span></td>
+      <td><span class="badge badge-present">✓ Present</span></td>
+      <td>${r.time}</td>
+      <td>${r.session || '—'}</td>
+    </tr>`).join('');
+  }
+  showToast('✅ Report generated');
+}
+
+function exportCSV() {
+  const from = document.getElementById('repFrom').value;
+  const to   = document.getElementById('repTo').value;
+  const rows = [['Name','Roll','Class','Date','Time','Status','Session']];
+  const data = DB.attendance.filter(a => (!from || a.date >= from) && (!to || a.date <= to));
+  data.forEach(r => rows.push([r.name, r.roll, r.cls||'', r.date, r.time, r.status, r.session||'']));
+  const csv = rows.map(r => r.map(v => `"${v}"`).join(',')).join('\n');
+  const a = document.createElement('a');
+  a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
+  a.download = `attendance_${from}_${to}.csv`;
+  a.click();
+  showToast('⬇ CSV exported!');
+}
+
+/* ════════════════════════════════════════════════
+   INIT
+   ════════════════════════════════════════════════ */
+document.getElementById('attDate').value = new Date().toISOString().split('T')[0];
+document.getElementById('todayDate').textContent = new Date().toLocaleDateString('en-IN', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
+
+window.addEventListener('load', loadModels);
+</script>
+</body>
+</html>
