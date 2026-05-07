@@ -225,15 +225,6 @@ playsinline>
 
 </div>
 
-<div class="card">
-
-<h2>Today's Attendance</h2>
-
-<div id="attendanceList"></div>
-
-</div>
-
-</div>
 
 <script>
 
