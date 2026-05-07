@@ -5,6 +5,7 @@ include 'db.php';
 <!DOCTYPE html>
 <html lang="en">
 <head>
+
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
@@ -29,14 +30,10 @@ body{
 header{
     padding:20px;
     background:#111827;
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
     border-bottom:1px solid #1e293b;
 }
 
 header h1{
-    font-size:24px;
     color:#38bdf8;
 }
 
@@ -55,7 +52,7 @@ header h1{
 }
 
 .card h2{
-    margin-bottom:15px;
+    margin-bottom:20px;
     color:#38bdf8;
 }
 
@@ -77,12 +74,12 @@ table th{
 
 button{
     background:#38bdf8;
-    border:none;
     color:white;
-    padding:10px 20px;
+    border:none;
+    padding:12px 20px;
     border-radius:8px;
     cursor:pointer;
-    font-size:15px;
+    margin-top:10px;
 }
 
 button:hover{
@@ -94,8 +91,8 @@ select{
     padding:12px;
     background:#0f172a;
     border:1px solid #334155;
-    color:white;
     border-radius:8px;
+    color:white;
     margin-bottom:15px;
 }
 
@@ -103,7 +100,6 @@ select{
     position:relative;
     width:100%;
     max-width:700px;
-    margin:auto;
 }
 
 video{
@@ -118,7 +114,7 @@ canvas{
 }
 
 .status{
-    margin-top:15px;
+    margin-top:20px;
     padding:15px;
     border-radius:10px;
     display:none;
@@ -134,40 +130,23 @@ canvas{
     color:#f87171;
 }
 
-.flex{
-    display:flex;
-    gap:20px;
-    flex-wrap:wrap;
-}
-
-.left{
-    flex:2;
-}
-
-.right{
-    flex:1;
-}
-
-.log-box{
-    max-height:500px;
-    overflow:auto;
-}
-
 .log-item{
-    padding:12px;
+    padding:15px;
     border-bottom:1px solid #1e293b;
 }
 
 .badge{
+    background:#14532d;
+    color:#4ade80;
     padding:5px 10px;
     border-radius:20px;
     font-size:12px;
-    background:#14532d;
-    color:#4ade80;
 }
 
 </style>
+
 </head>
+
 <body>
 
 <header>
@@ -176,42 +155,63 @@ canvas{
 
 <div class="container">
 
-    <!-- STUDENT LIST -->
+    <!-- STUDENTS -->
 
     <div class="card">
+
         <h2>Students Database</h2>
 
         <table>
+
             <thead>
+
                 <tr>
                     <th>ID</th>
                     <th>Name</th>
-                    <th>Roll Number</th>
+                    <th>Enrollment Number</th>
                     <th>Class</th>
                 </tr>
+
             </thead>
 
             <tbody>
 
             <?php
 
-            $query = $conn->query("SELECT * FROM students26");
+            $students = $conn->query("
+            SELECT * FROM students26
+            ");
 
-            while($student = $query->fetch_assoc()){
+            while($row = $students->fetch_assoc()){
 
             ?>
 
             <tr>
-                <td><?php echo $student['id']; ?></td>
-                <td><?php echo $student['name']; ?></td>
-                <td><?php echo $student['roll_no']; ?></td>
-                <td><?php echo $student['class']; ?></td>
+
+                <td>
+                    <?php echo $row['id']; ?>
+                </td>
+
+                <td>
+                    <?php echo $row['name']; ?>
+                </td>
+
+                <td>
+                    <?php echo $row['enrollment_id']; ?>
+                </td>
+
+                <td>
+                    <?php echo $row['class']; ?>
+                </td>
+
             </tr>
 
             <?php } ?>
 
             </tbody>
+
         </table>
+
     </div>
 
     <!-- FACE REGISTRATION -->
@@ -221,38 +221,57 @@ canvas{
         <h2>Register Student Face</h2>
 
         <select id="studentSelect">
-            <option value="">Select Student</option>
+
+            <option value="">
+                Select Student
+            </option>
 
             <?php
 
-            $query2 = $conn->query("SELECT * FROM students26");
+            $students2 = $conn->query("
+            SELECT * FROM students26
+            ");
 
-            while($student2 = $query2->fetch_assoc()){
+            while($row2 = $students2->fetch_assoc()){
 
             ?>
 
-            <option value="<?php echo $student2['id']; ?>">
-                <?php echo $student2['name']; ?>
+            <option value="<?php echo $row2['id']; ?>">
+
+                <?php echo $row2['name']; ?>
+
+                -
+
+                <?php echo $row2['enrollment_id']; ?>
+
             </option>
 
             <?php } ?>
 
         </select>
 
-        <button onclick="startRegisterCamera()">Start Camera</button>
+        <button onclick="startRegisterCamera()">
+            Start Camera
+        </button>
 
         <br><br>
 
         <div class="camera-box">
 
-            <video id="registerVideo" autoplay muted></video>
+            <video
+            id="registerVideo"
+            autoplay
+            muted
+            playsinline>
+            </video>
+
             <canvas id="registerCanvas"></canvas>
 
         </div>
 
-        <br>
-
-        <button onclick="captureFace()">Capture Face</button>
+        <button onclick="captureFace()">
+            Capture Face
+        </button>
 
     </div>
 
@@ -262,38 +281,36 @@ canvas{
 
         <h2>Take Attendance</h2>
 
-        <button onclick="startAttendance()">Start Attendance Camera</button>
+        <button onclick="startAttendance()">
+            Start Attendance Camera
+        </button>
 
         <br><br>
 
-        <div class="flex">
+        <div class="camera-box">
 
-            <div class="left">
+            <video
+            id="video"
+            autoplay
+            muted
+            playsinline>
+            </video>
 
-                <div class="camera-box">
-
-                    <video id="video" autoplay muted></video>
-                    <canvas id="overlay"></canvas>
-
-                </div>
-
-                <div id="statusBox" class="status"></div>
-
-            </div>
-
-            <div class="right">
-
-                <div class="card">
-
-                    <h2>Today's Attendance</h2>
-
-                    <div class="log-box" id="attendanceLog"></div>
-
-                </div>
-
-            </div>
+            <canvas id="overlay"></canvas>
 
         </div>
+
+        <div id="statusBox" class="status"></div>
+
+    </div>
+
+    <!-- ATTENDANCE LOG -->
+
+    <div class="card">
+
+        <h2>Today's Attendance</h2>
+
+        <div id="attendanceLog"></div>
 
     </div>
 
@@ -301,58 +318,92 @@ canvas{
 
 <script>
 
-const MODEL_URL = 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api/model';
+const MODEL_URL =
+'https://cdn.jsdelivr.net/npm/@vladmandic/face-api/model';
 
 let faceMatcher = null;
+
 let attendanceRunning = false;
+
+let markedStudents = [];
+
+
+// LOAD MODELS
 
 async function loadModels(){
 
-    await Promise.all([
+    try{
 
-        faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL),
-        faceapi.nets.faceLandmark68TinyNet.loadFromUri(MODEL_URL),
-        faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL)
+        await Promise.all([
 
-    ]);
+            faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL),
 
-    await loadFaces();
+            faceapi.nets.faceLandmark68TinyNet.loadFromUri(MODEL_URL),
 
-    alert("AI Models Loaded");
+            faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL)
+
+        ]);
+
+        await loadFaces();
+
+        alert("AI Models Loaded Successfully");
+
+    }catch(error){
+
+        console.log(error);
+
+        alert("Model Loading Failed");
+
+    }
 
 }
 
 loadModels();
 
 
-// LOAD FACE DATA
+// LOAD FACES
 
 async function loadFaces(){
 
-    const response = await fetch('load_faces.php');
+    const response =
+    await fetch('load_faces.php');
 
-    const data = await response.json();
+    const data =
+    await response.json();
 
     const labeled = [];
 
     for(const item of data){
 
         const descriptors = [
-            new Float32Array(JSON.parse(item.descriptor))
+
+            new Float32Array(
+                JSON.parse(item.descriptor)
+            )
+
         ];
 
         labeled.push(
+
             new faceapi.LabeledFaceDescriptors(
+
                 item.student_id.toString(),
+
                 descriptors
+
             )
+
         );
 
     }
 
     if(labeled.length > 0){
 
-        faceMatcher = new faceapi.FaceMatcher(labeled, 0.5);
+        faceMatcher =
+        new faceapi.FaceMatcher(
+            labeled,
+            0.5
+        );
 
     }
 
@@ -363,13 +414,39 @@ async function loadFaces(){
 
 async function startRegisterCamera(){
 
-    const video = document.getElementById('registerVideo');
+    try{
 
-    const stream = await navigator.mediaDevices.getUserMedia({
-        video:true
-    });
+        const video =
+        document.getElementById(
+            'registerVideo'
+        );
 
-    video.srcObject = stream;
+        const stream =
+        await navigator.mediaDevices.getUserMedia({
+
+            video:{
+                width:640,
+                height:480,
+                facingMode:"user"
+            },
+
+            audio:false
+
+        });
+
+        video.srcObject = stream;
+
+        await video.play();
+
+        alert("Camera Started");
+
+    }catch(error){
+
+        console.log(error);
+
+        alert("Camera Permission Denied");
+
+    }
 
 }
 
@@ -378,34 +455,59 @@ async function startRegisterCamera(){
 
 async function captureFace(){
 
-    const studentId = document.getElementById('studentSelect').value;
+    const studentId =
+    document.getElementById(
+        'studentSelect'
+    ).value;
 
     if(studentId == ''){
 
-        alert("Select Student");
+        alert("Please Select Student");
 
         return;
 
     }
 
-    const video = document.getElementById('registerVideo');
+    const video =
+    document.getElementById(
+        'registerVideo'
+    );
 
-    const detection = await faceapi
-    .detectSingleFace(video, new faceapi.TinyFaceDetectorOptions())
-    .withFaceLandmarks(true)
+    const detection =
+    await faceapi
+
+    .detectSingleFace(
+
+        video,
+
+        new faceapi.TinyFaceDetectorOptions({
+
+            inputSize:320,
+            scoreThreshold:0.5
+
+        })
+
+    )
+
+    .withFaceLandmarks()
+
     .withFaceDescriptor();
 
     if(!detection){
 
-        alert("No face detected");
+        alert("Face Not Detected");
 
         return;
 
     }
 
-    const descriptor = Array.from(detection.descriptor);
+    const descriptor =
+    Array.from(
+        detection.descriptor
+    );
 
-    const response = await fetch('save_face.php',{
+    const response =
+    await fetch('save_face.php',{
 
         method:'POST',
 
@@ -416,13 +518,15 @@ async function captureFace(){
         body:JSON.stringify({
 
             student_id:studentId,
+
             descriptor:descriptor
 
         })
 
     });
 
-    const result = await response.json();
+    const result =
+    await response.json();
 
     if(result.status == 'success'){
 
@@ -430,12 +534,16 @@ async function captureFace(){
 
         await loadFaces();
 
+    }else{
+
+        alert("Registration Failed");
+
     }
 
 }
 
 
-// ATTENDANCE CAMERA
+// START ATTENDANCE
 
 async function startAttendance(){
 
@@ -449,13 +557,25 @@ async function startAttendance(){
 
     attendanceRunning = true;
 
-    const video = document.getElementById('video');
+    const video =
+    document.getElementById('video');
 
-    const stream = await navigator.mediaDevices.getUserMedia({
-        video:true
+    const stream =
+    await navigator.mediaDevices.getUserMedia({
+
+        video:{
+            width:640,
+            height:480,
+            facingMode:"user"
+        },
+
+        audio:false
+
     });
 
     video.srcObject = stream;
+
+    await video.play();
 
     detectAttendance();
 
@@ -466,55 +586,104 @@ async function startAttendance(){
 
 async function detectAttendance(){
 
-    const video = document.getElementById('video');
+    const video =
+    document.getElementById('video');
 
-    const canvas = document.getElementById('overlay');
+    const canvas =
+    document.getElementById('overlay');
 
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
+    canvas.width =
+    video.videoWidth;
+
+    canvas.height =
+    video.videoHeight;
 
     const displaySize = {
+
         width:video.videoWidth,
+
         height:video.videoHeight
+
     };
 
-    faceapi.matchDimensions(canvas, displaySize);
+    faceapi.matchDimensions(
+        canvas,
+        displaySize
+    );
 
     while(attendanceRunning){
 
-        const detections = await faceapi
-        .detectAllFaces(video,new faceapi.TinyFaceDetectorOptions())
-        .withFaceLandmarks(true)
+        const detections =
+        await faceapi
+
+        .detectAllFaces(
+
+            video,
+
+            new faceapi.TinyFaceDetectorOptions({
+
+                inputSize:320,
+
+                scoreThreshold:0.5
+
+            })
+
+        )
+
+        .withFaceLandmarks()
+
         .withFaceDescriptors();
 
-        const resized = faceapi.resizeResults(detections, displaySize);
+        const resized =
+        faceapi.resizeResults(
+            detections,
+            displaySize
+        );
 
-        const ctx = canvas.getContext('2d');
+        const ctx =
+        canvas.getContext('2d');
 
-        ctx.clearRect(0,0,canvas.width,canvas.height);
+        ctx.clearRect(
+            0,
+            0,
+            canvas.width,
+            canvas.height
+        );
 
         resized.forEach(async detection => {
 
-            const result = faceMatcher.findBestMatch(
+            const result =
+            faceMatcher.findBestMatch(
                 detection.descriptor
             );
 
-            const box = detection.detection.box;
+            const box =
+            detection.detection.box;
 
             let drawBox;
 
             if(result.label != 'unknown'){
 
-                drawBox = new faceapi.draw.DrawBox(box,{
-                    label:'Student ID : '+result.label
+                drawBox =
+                new faceapi.draw.DrawBox(box,{
+
+                    label:
+                    'Student ID : ' +
+                    result.label
+
                 });
 
-                await markAttendance(result.label);
+                await markAttendance(
+                    result.label
+                );
 
             }else{
 
-                drawBox = new faceapi.draw.DrawBox(box,{
+                drawBox =
+                new faceapi.draw.DrawBox(box,{
+
                     label:'Unknown'
+
                 });
 
             }
@@ -523,7 +692,9 @@ async function detectAttendance(){
 
         });
 
-        await new Promise(resolve => setTimeout(resolve,1000));
+        await new Promise(resolve =>
+            setTimeout(resolve,1000)
+        );
 
     }
 
@@ -531,8 +702,6 @@ async function detectAttendance(){
 
 
 // MARK ATTENDANCE
-
-let markedStudents = [];
 
 async function markAttendance(studentId){
 
@@ -544,7 +713,8 @@ async function markAttendance(studentId){
 
     markedStudents.push(studentId);
 
-    const response = await fetch('mark_attendance.php',{
+    const response =
+    await fetch('mark_attendance.php',{
 
         method:'POST',
 
@@ -553,28 +723,41 @@ async function markAttendance(studentId){
         },
 
         body:JSON.stringify({
+
             student_id:studentId
+
         })
 
     });
 
-    const result = await response.json();
+    const result =
+    await response.json();
 
-    const statusBox = document.getElementById('statusBox');
+    const statusBox =
+    document.getElementById(
+        'statusBox'
+    );
 
-    statusBox.style.display = 'block';
+    statusBox.style.display =
+    'block';
 
     if(result.status == 'marked'){
 
-        statusBox.className = 'status success';
-        statusBox.innerHTML = 'Attendance Marked Successfully';
+        statusBox.className =
+        'status success';
+
+        statusBox.innerHTML =
+        'Attendance Marked Successfully';
 
         loadAttendanceLog();
 
     }else{
 
-        statusBox.className = 'status error';
-        statusBox.innerHTML = 'Attendance Already Marked';
+        statusBox.className =
+        'status error';
+
+        statusBox.innerHTML =
+        'Attendance Already Marked';
 
     }
 
@@ -585,11 +768,18 @@ async function markAttendance(studentId){
 
 async function loadAttendanceLog(){
 
-    const response = await fetch('get_attendance.php');
+    const response =
+    await fetch(
+        'get_attendance.php'
+    );
 
-    const data = await response.json();
+    const data =
+    await response.json();
 
-    const log = document.getElementById('attendanceLog');
+    const log =
+    document.getElementById(
+        'attendanceLog'
+    );
 
     log.innerHTML = '';
 
@@ -599,11 +789,13 @@ async function loadAttendanceLog(){
 
         <div class="log-item">
 
-            <strong>${item.name}</strong>
+            <strong>
+                ${item.name}
+            </strong>
 
-            <br>
+            <br><br>
 
-            ${item.roll_no}
+            ${item.enrollment_id}
 
             <br><br>
 
