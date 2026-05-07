@@ -460,7 +460,7 @@ playsinline>
 <div id="photoContainer"></div>
 
 </div>
-
+<!--
 <div class="card">
 
 <h2>Take Attendance</h2>
@@ -487,7 +487,7 @@ playsinline>
 </div>
 
 </div>
-
+-->
 
 <script>
 
