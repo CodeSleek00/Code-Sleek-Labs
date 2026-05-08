@@ -17,52 +17,40 @@ include 'db.php';
 @import url('https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,100..900;1,100..900&display=swap');
 
 :root {
-    --primary-50: #eef2ff;
-    --primary-100: #e0e7ff;
-    --primary-200: #c7d2fe;
-    --primary-300: #a5b4fc;
-    --primary-400: #818cf8;
-    --primary-500: #6366f1;
-    --primary-600: #4f46e5;
-    --primary-700: #4338ca;
-    --primary-800: #3730a3;
-    --primary-900: #312e81;
+    /* 70% White Base */
+    --white-50: #ffffff;
+    --white-100: #f8fafc;
+    --white-200: #f1f5f9;
+    --white-300: #e2e8f0;
+    --white-400: #cbd5e1;
     
-    --gray-50: #f9fafb;
-    --gray-100: #f3f4f6;
-    --gray-200: #e5e7eb;
-    --gray-300: #d1d5db;
-    --gray-400: #9ca3af;
-    --gray-500: #6b7280;
-    --gray-600: #4b5563;
-    --gray-700: #374151;
-    --gray-800: #1f2937;
-    --gray-900: #111827;
+    /* 20% Blue Primary */
+    --blue-50: #eff6ff;
+    --blue-100: #dbeafe;
+    --blue-200: #bfdbfe;
+    --blue-300: #93c5fd;
+    --blue-400: #60a5fa;
+    --blue-500: #3b82f6;
+    --blue-600: #2563eb;
+    --blue-700: #1d4ed8;
+    --blue-800: #1e40af;
+    --blue-900: #1e3a8a;
     
-    --success-50: #ecfdf5;
-    --success-500: #10b981;
-    --success-600: #059669;
+    /* 10% Accent - Purple/Gold */
+    --accent-500: #8b5cf6;
+    --accent-600: #7c3aed;
+    --accent-700: #6d28d9;
+    --accent-gold: #f59e0b;
     
-    --warning-50: #fffbeb;
-    --warning-500: #f59e0b;
-    --warning-600: #d97706;
-    
-    --error-50: #fef2f2;
-    --error-500: #ef4444;
-    --error-600: #dc2626;
-    
-    --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.05);
-    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1);
+    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.08);
     --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
     --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
     --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
-    --shadow-2xl: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
     
-    --radius-sm: 0.375rem;
-    --radius-md: 0.5rem;
-    --radius-lg: 0.75rem;
-    --radius-xl: 1rem;
-    --radius-2xl: 1.5rem;
+    --radius-sm: 0.5rem;
+    --radius-md: 0.75rem;
+    --radius-lg: 1rem;
+    --radius-xl: 1.5rem;
     --radius-full: 9999px;
 }
 
@@ -74,57 +62,44 @@ include 'db.php';
 
 body {
     font-family: 'Inter', sans-serif;
-    background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
-    color: var(--gray-100);
+    background: var(--white-100);
+    color: var(--blue-900);
     line-height: 1.5;
     -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
     min-height: 100vh;
     display: flex;
     justify-content: center;
     align-items: center;
     padding: 1.5rem;
-    position: relative;
-    overflow-x: hidden;
-}
-
-body::before {
-    content: '';
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: radial-gradient(circle at 20% 50%, rgba(99, 102, 241, 0.1) 0%, transparent 50%);
-    pointer-events: none;
 }
 
 .main {
     width: 100%;
     max-width: 560px;
     margin: 0 auto;
-    position: relative;
-    z-index: 1;
 }
 
-/* Modern Card */
+/* Card - 70% White */
 .card {
-    background: rgba(30, 41, 59, 0.95);
-    backdrop-filter: blur(10px);
-    border-radius: var(--radius-2xl);
+    background: var(--white-50);
+    border-radius: var(--radius-xl);
     padding: 1.75rem;
-    border: 1px solid rgba(99, 102, 241, 0.2);
-    box-shadow: var(--shadow-2xl);
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: var(--shadow-lg);
+    border: 1px solid var(--white-300);
+    transition: all 0.3s ease;
 }
 
-/* Header */
+.card:hover {
+    box-shadow: var(--shadow-xl);
+}
+
+/* Header - Blue Gradient */
 h1 {
     font-size: 1.75rem;
     font-weight: 700;
     text-align: center;
     margin-bottom: 1.75rem;
-    background: linear-gradient(135deg, #ffffff 0%, #a5b4fc 100%);
+    background: linear-gradient(135deg, var(--blue-700), var(--blue-600));
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
@@ -141,16 +116,16 @@ h1::before {
     background: none;
     -webkit-background-clip: unset;
     background-clip: unset;
-    color: var(--primary-400);
+    color: var(--blue-500);
 }
 
-/* Modern Button */
+/* Button - 20% Blue with Accent hover */
 button {
     width: 100%;
     padding: 0.875rem 1.5rem;
     border: none;
-    border-radius: var(--radius-lg);
-    background: linear-gradient(135deg, var(--primary-600), var(--primary-700));
+    border-radius: var(--radius-md);
+    background: var(--blue-600);
     color: white;
     font-family: 'Inter', sans-serif;
     font-size: 0.9375rem;
@@ -162,8 +137,7 @@ button {
     align-items: center;
     justify-content: center;
     gap: 0.5rem;
-    position: relative;
-    overflow: hidden;
+    box-shadow: var(--shadow-sm);
 }
 
 button::before {
@@ -172,31 +146,32 @@ button::before {
 }
 
 button:hover {
-    background: linear-gradient(135deg, var(--primary-700), var(--primary-800));
+    background: var(--accent-600);
     transform: translateY(-2px);
-    box-shadow: var(--shadow-lg);
+    box-shadow: var(--shadow-md);
 }
 
 button:active {
     transform: translateY(0);
 }
 
-/* Circular Camera Container */
+/* Circular Camera Container - White with Blue Border */
 .camera-box {
     position: relative;
     width: 100%;
     aspect-ratio: 1 / 1;
     border-radius: 50%;
     overflow: hidden;
-    background: linear-gradient(135deg, var(--gray-800), var(--gray-900));
-    box-shadow: var(--shadow-2xl);
-    border: 3px solid rgba(99, 102, 241, 0.3);
+    background: var(--white-200);
+    box-shadow: var(--shadow-lg);
+    border: 3px solid var(--blue-500);
     transition: all 0.3s ease;
 }
 
 .camera-box:hover {
-    border-color: var(--primary-500);
+    border-color: var(--accent-500);
     transform: scale(1.01);
+    box-shadow: var(--shadow-xl);
 }
 
 video {
@@ -204,7 +179,7 @@ video {
     height: 100%;
     object-fit: cover;
     border-radius: 50%;
-    background: var(--gray-900);
+    background: var(--white-300);
 }
 
 canvas {
@@ -217,33 +192,33 @@ canvas {
     pointer-events: none;
 }
 
-/* Status Badge */
+/* Status - Blue Background */
 .status {
     text-align: center;
     margin-top: 1rem;
     padding: 0.625rem 1rem;
-    background: rgba(99, 102, 241, 0.1);
+    background: var(--blue-50);
     border-radius: var(--radius-full);
     font-size: 0.8125rem;
     font-weight: 500;
-    color: var(--primary-300);
+    color: var(--blue-700);
     display: inline-block;
     width: auto;
     margin-left: auto;
     margin-right: auto;
-    backdrop-filter: blur(4px);
-    border: 1px solid rgba(99, 102, 241, 0.2);
+    border: 1px solid var(--blue-100);
 }
 
-/* Student Result Card */
+/* Student Result Card - White Card */
 #studentCard {
     margin-top: 1.5rem;
-    background: linear-gradient(135deg, var(--gray-800), var(--gray-900));
+    background: var(--white-50);
     padding: 1.5rem;
-    border-radius: var(--radius-xl);
+    border-radius: var(--radius-lg);
     display: none;
-    animation: slideUp 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-    border: 1px solid rgba(99, 102, 241, 0.2);
+    animation: slideUp 0.4s ease;
+    border: 1px solid var(--white-300);
+    box-shadow: var(--shadow-md);
     position: relative;
     overflow: hidden;
 }
@@ -254,8 +229,8 @@ canvas {
     top: 0;
     left: 0;
     right: 0;
-    height: 3px;
-    background: linear-gradient(90deg, var(--primary-500), var(--success-500), var(--warning-500));
+    height: 4px;
+    background: linear-gradient(90deg, var(--blue-500), var(--accent-500), var(--accent-gold));
 }
 
 #studentCard img {
@@ -263,44 +238,34 @@ canvas {
     height: 88px;
     border-radius: 50%;
     object-fit: cover;
-    border: 3px solid var(--primary-500);
-    box-shadow: var(--shadow-lg);
+    border: 3px solid var(--blue-500);
+    box-shadow: var(--shadow-md);
     margin-bottom: 0.75rem;
 }
 
 #studentCard h2 {
     font-size: 1.25rem;
     font-weight: 700;
-    color: white;
+    color: var(--blue-800);
     margin-bottom: 0.25rem;
 }
 
 #studentCard p {
     font-size: 0.8125rem;
-    color: var(--gray-400);
+    color: var(--blue-600);
     margin: 0.25rem 0;
 }
 
-#studentCard .success,
-#studentCard .warning {
-    font-size: 0.875rem;
-    font-weight: 600;
-    margin-top: 0.75rem;
-    padding: 0.5rem 1rem;
-    border-radius: var(--radius-full);
-    display: inline-block;
-}
-
+/* Success Text - Blue */
 .success {
-    color: var(--success-500);
-    background: rgba(16, 185, 129, 0.1);
-    border: 1px solid rgba(16, 185, 129, 0.2);
+    color: var(--blue-600);
+    font-weight: 600;
 }
 
+/* Warning Text - Accent */
 .warning {
-    color: var(--warning-500);
-    background: rgba(245, 158, 11, 0.1);
-    border: 1px solid rgba(245, 158, 11, 0.2);
+    color: var(--accent-gold);
+    font-weight: 600;
 }
 
 /* Animations */
@@ -315,13 +280,8 @@ canvas {
     }
 }
 
-@keyframes pulse {
-    0%, 100% {
-        opacity: 1;
-    }
-    50% {
-        opacity: 0.7;
-    }
+@keyframes spin {
+    to { transform: rotate(360deg); }
 }
 
 /* Loading State */
@@ -339,14 +299,10 @@ canvas {
     width: 20px;
     height: 20px;
     margin: -10px 0 0 -10px;
-    border: 2px solid rgba(255, 255, 255, 0.3);
-    border-top-color: white;
+    border: 2px solid var(--blue-200);
+    border-top-color: var(--blue-600);
     border-radius: 50%;
     animation: spin 0.6s linear infinite;
-}
-
-@keyframes spin {
-    to { transform: rotate(360deg); }
 }
 
 /* Responsive Design */
@@ -408,64 +364,42 @@ canvas {
 }
 
 ::-webkit-scrollbar-track {
-    background: var(--gray-800);
+    background: var(--white-200);
     border-radius: var(--radius-full);
 }
 
 ::-webkit-scrollbar-thumb {
-    background: var(--primary-600);
+    background: var(--blue-400);
     border-radius: var(--radius-full);
 }
 
 ::-webkit-scrollbar-thumb:hover {
-    background: var(--primary-500);
+    background: var(--blue-500);
 }
 
 /* Focus States */
 button:focus-visible {
-    outline: 2px solid var(--primary-400);
+    outline: 2px solid var(--blue-500);
     outline-offset: 2px;
 }
 
-/* Camera Box Active State */
+/* Camera Active Animation */
 .camera-box.active {
     animation: cameraPulse 2s infinite;
 }
 
 @keyframes cameraPulse {
     0%, 100% {
-        box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.4);
-        border-color: rgba(99, 102, 241, 0.3);
+        box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.4);
+        border-color: var(--blue-500);
     }
     50% {
-        box-shadow: 0 0 0 12px rgba(99, 102, 241, 0);
-        border-color: var(--primary-500);
+        box-shadow: 0 0 0 12px rgba(59, 130, 246, 0);
+        border-color: var(--accent-500);
     }
 }
 
-/* Student Info Grid */
-.student-info {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    text-align: center;
-}
-
-.student-details {
-    margin-top: 0.5rem;
-}
-
-.student-details p {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.5rem;
-}
-
-.student-details p::before {
-    font-size: 0.875rem;
-}
-
+/* Student Details Icons */
 #studentEnrollment::before {
     content: '📋';
     margin-right: 0.25rem;
@@ -474,6 +408,12 @@ button:focus-visible {
 #studentTime::before {
     content: '⏰';
     margin-right: 0.25rem;
+}
+
+center {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
 }
 </style>
 
