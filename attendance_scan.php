@@ -488,7 +488,7 @@ function resetIdleTimer(){
         window.location.href =
         'screensaver.php';
 
-    },120000); // 2 minutes
+    },12000); // 2 minutes
 
 }
 
