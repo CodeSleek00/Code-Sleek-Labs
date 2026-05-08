@@ -30,24 +30,104 @@ body{
     justify-content:center;
     align-items:center;
 
-    background:
-    linear-gradient(
-        135deg,
-        #0f172a,
-        #1e3a8a,
-        #7c3aed
-    );
-
     color:white;
 
     position:relative;
+
+    background:black;
 }
+
+/* Background Video */
+
+.video-bg{
+
+    position:absolute;
+
+    top:0;
+    left:0;
+
+    width:100%;
+    height:100%;
+
+    object-fit:cover;
+
+    z-index:-3;
+}
+
+/* Dark Overlay */
+
+.overlay{
+
+    position:absolute;
+
+    inset:0;
+
+    background:
+    linear-gradient(
+        rgba(0,0,0,0.55),
+        rgba(0,0,0,0.75)
+    );
+
+    z-index:-2;
+}
+
+/* Glow Effects */
+
+.glow{
+
+    position:absolute;
+
+    width:400px;
+    height:400px;
+
+    filter:blur(140px);
+
+    opacity:0.25;
+
+    border-radius:50%;
+
+    z-index:-1;
+}
+
+.glow.one{
+
+    top:-100px;
+    left:-100px;
+
+    background:#3b82f6;
+}
+
+.glow.two{
+
+    bottom:-100px;
+    right:-100px;
+
+    background:#7c3aed;
+}
+
+/* Main Container */
 
 .container{
 
     text-align:center;
+
     animation:fadeIn 1s ease;
+
+    padding:20px;
+
+    backdrop-filter:blur(6px);
+
+    background:rgba(255,255,255,0.05);
+
+    border:1px solid rgba(255,255,255,0.08);
+
+    border-radius:25px;
+
+    box-shadow:
+    0 0 40px rgba(0,0,0,0.35);
 }
+
+/* Logo */
 
 .logo{
 
@@ -68,6 +148,8 @@ body{
     animation:float 3s ease-in-out infinite;
 }
 
+/* Text */
+
 h1{
 
     font-size:3rem;
@@ -76,14 +158,19 @@ h1{
     letter-spacing:2px;
 
     margin-bottom:10px;
+
+    text-shadow:
+    0 0 20px rgba(255,255,255,0.3);
 }
 
 p{
 
     font-size:1.1rem;
 
-    opacity:0.8;
+    opacity:0.85;
 }
+
+/* Scan Line */
 
 .scan-line{
 
@@ -102,6 +189,8 @@ p{
 
     animation:scan 3s linear infinite;
 }
+
+/* Animations */
 
 @keyframes scan{
 
@@ -141,33 +230,23 @@ p{
 
 }
 
-.glow{
+/* Responsive */
 
-    position:absolute;
+@media(max-width:768px){
 
-    width:400px;
-    height:400px;
+    h1{
+        font-size:2rem;
+    }
 
-    background:#3b82f6;
+    p{
+        font-size:0.95rem;
+    }
 
-    filter:blur(140px);
+    .logo{
+        width:110px;
+        height:110px;
+    }
 
-    opacity:0.25;
-
-    border-radius:50%;
-
-    z-index:-1;
-}
-
-.glow.one{
-    top:-100px;
-    left:-100px;
-}
-
-.glow.two{
-    bottom:-100px;
-    right:-100px;
-    background:#7c3aed;
 }
 
 </style>
@@ -175,6 +254,25 @@ p{
 </head>
 
 <body>
+
+<!-- Background Video -->
+
+<video
+class="video-bg"
+autoplay
+muted
+loop
+playsinline
+>
+
+<source
+src="background.mp4"
+type="video/mp4"
+>
+
+</video>
+
+<div class="overlay"></div>
 
 <div class="glow one"></div>
 <div class="glow two"></div>
@@ -203,11 +301,16 @@ Move mouse or press any key to continue
 function returnToAttendance(){
 
     window.location.href =
-    'attendance.php';
+    'attendance_scan.php';
 
 }
 
-['mousemove','click','keypress','touchstart']
+[
+'mousemove',
+'click',
+'keypress',
+'touchstart'
+]
 .forEach(event=>{
 
     document.addEventListener(
