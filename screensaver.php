@@ -60,7 +60,7 @@ type="video/mp4"
 >
 
 </video>
-
+<!--
 <script>
 
 function returnToAttendance(){
@@ -85,7 +85,6 @@ function returnToAttendance(){
 
 });
 
-</script>
-
+</script>-->
 </body>
 </html>
