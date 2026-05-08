@@ -14,6 +14,53 @@ include 'db.php';
 <script src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
 
 <style>
+    /* Top Navigation Button */
+
+.top-btn{
+    position:fixed;
+    top:20px;
+    right:20px;
+    z-index:9999;
+
+    padding:12px 24px;
+
+    border:none;
+    border-radius:50px;
+
+    background:linear-gradient(
+        135deg,
+        #2563eb,
+        #8b5cf6
+    );
+
+    color:white;
+
+    font-size:14px;
+    font-weight:600;
+
+    cursor:pointer;
+
+    box-shadow:0 10px 20px rgba(0,0,0,0.15);
+
+    transition:0.3s ease;
+
+    width:auto;
+    margin:0;
+}
+
+.top-btn:hover{
+    transform:translateY(-2px) scale(1.03);
+    background:linear-gradient(
+        135deg,
+        #1d4ed8,
+        #7c3aed
+    );
+}
+
+.top-btn::before{
+    content:'🏠';
+    margin-right:8px;
+}
 @import url('https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,100..900;1,100..900&display=swap');
 
 :root {
@@ -420,7 +467,12 @@ center {
 </head>
 
 <body>
-
+<button
+class="top-btn"
+onclick="goToPage()"
+>
+Home
+</button>
 <div class="main">
 
 <div class="card">
@@ -477,7 +529,12 @@ Attendance Marked Successfully
 </div>
 
 <script>
+function goToPage(){
 
+    window.location.href =
+    'screensaver.php';
+
+}
 const MODEL_URL =
 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api/model/';
 
