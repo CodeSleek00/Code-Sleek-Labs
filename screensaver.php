@@ -46,12 +46,7 @@ body{
 
     border:none;
     border-radius:50px;
-
-    background:linear-gradient(
-        135deg,
-        #ff0000,
-        #ffcc00
-    );
+    background: white;
 
     color:white;
     font-size:16px;
@@ -97,7 +92,7 @@ type="video/mp4"
 class="top-btn"
 onclick="goToPage()"
 >
-Go To Page
+🏠
 </button>
 
 <script>
