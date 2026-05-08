@@ -26,12 +26,7 @@ include 'db.php';
 
     border:none;
     border-radius:50px;
-
-    background:linear-gradient(
-        135deg,
-        #2563eb,
-        #8b5cf6
-    );
+    background: white;
 
     color:white;
 
@@ -471,7 +466,7 @@ center {
 class="top-btn"
 onclick="goToPage()"
 >
-Home
+Screensaver
 </button>
 <div class="main">
 
