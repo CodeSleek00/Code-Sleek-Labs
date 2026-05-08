@@ -272,30 +272,6 @@ type="video/mp4"
 
 </video>
 
-<div class="overlay"></div>
-
-<div class="glow one"></div>
-<div class="glow two"></div>
-
-<div class="scan-line"></div>
-
-<div class="container">
-
-<img
-src="https://cdn-icons-png.flaticon.com/512/3135/3135715.png"
-class="logo"
->
-
-<h1>
-FAIZ COMPUTER INSTITUTE
-</h1>
-
-<p>
-Move mouse or press any key to continue
-</p>
-
-</div>
-
 <script>
 
 function returnToAttendance(){
