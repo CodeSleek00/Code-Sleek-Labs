@@ -475,42 +475,7 @@ Attendance Marked Successfully
 </div>
 
 </div>
-<script id="8j0q3w">
 
-let idleTimer;
-
-function resetIdleTimer(){
-
-    clearTimeout(idleTimer);
-
-    idleTimer = setTimeout(()=>{
-
-        window.location.href =
-        'screensaver.php';
-
-    },1200); // 2 minutes
-
-}
-
-['mousemove','click','keypress','touchstart']
-.forEach(event=>{
-
-    document.addEventListener(
-        event,
-        resetIdleTimer
-    );
-
-});
-
-window.onload = async()=>{
-
-    await loadModels();
-
-    resetIdleTimer();
-
-};
-
-</script>
 <script>
 
 const MODEL_URL =
