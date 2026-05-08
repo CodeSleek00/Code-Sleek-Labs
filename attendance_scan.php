@@ -43,14 +43,6 @@ include 'db.php';
     margin:0;
 }
 
-.top-btn:hover{
-    transform:translateY(-2px) scale(1.03);
-    background:linear-gradient(
-        135deg,
-        #1d4ed8,
-        #7c3aed
-    );
-}
 
 .top-btn::before{
     content:'🏠';
@@ -466,7 +458,6 @@ center {
 class="top-btn"
 onclick="goToPage()"
 >
-Screensaver
 </button>
 <div class="main">
 
