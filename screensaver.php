@@ -281,11 +281,6 @@ type="video/mp4"
 
 <div class="container">
 
-<img
-src="https://cdn-icons-png.flaticon.com/512/3135/3135715.png"
-class="logo"
->
-
 </div>
 
 <script>
