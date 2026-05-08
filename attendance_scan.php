@@ -111,7 +111,7 @@ h1 {
 }
 
 h1::before {
-    content: '🎓';
+   
     font-size: 1.75rem;
     background: none;
     -webkit-background-clip: unset;
