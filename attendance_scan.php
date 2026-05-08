@@ -425,7 +425,8 @@ center {
 
 <div class="card">
 
-<h1>AI Attendance Scan</h1>
+<h1>FAIZ COMPUTER INSTITUTE</h1>
+<h3>Attendance</h3>
 
 <button onclick="startCamera()">
 Start Camera
