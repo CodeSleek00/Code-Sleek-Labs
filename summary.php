@@ -357,7 +357,7 @@ tr:hover td{
         Manage and monitor complete student attendance records
     </p>
 </div>
-
+<!--
 <form method="GET" action="" class="filters">
 
 <input
@@ -406,7 +406,7 @@ Reset
 
 </form>
 
-</div>
+</div>-->
 
 <div class="stats">
 
