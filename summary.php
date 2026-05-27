@@ -405,8 +405,8 @@ Reset
 </a>
 
 </form>
-
-</div>-->
+-->
+</div>
 
 <div class="stats">
 
