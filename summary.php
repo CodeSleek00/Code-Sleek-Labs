@@ -1,51 +1,65 @@
+
 <?php
-
 include 'db.php';
-
-/*
-TODAY DATE
-*/
 
 $today = date("Y-m-d");
 
 /*
-SEARCH
+----------------------------------
+SEARCH + FILTERS
+----------------------------------
 */
 
-$search = "";
-
-if(isset($_GET['search'])){
-
-    $search = trim($_GET['search']);
-
-}
+$search = isset($_GET['search']) ? trim($_GET['search']) : '';
+$from   = isset($_GET['from']) ? $_GET['from'] : '';
+$to     = isset($_GET['to']) ? $_GET['to'] : '';
+$status = isset($_GET['status']) ? $_GET['status'] : '';
 
 /*
-FILTER DATES
+----------------------------------
+TOTAL STUDENTS
+----------------------------------
 */
 
-$from = isset($_GET['from']) ? $_GET['from'] : '';
-$to   = isset($_GET['to']) ? $_GET['to'] : '';
+$totalStudents = $conn->query("SELECT COUNT(*) as total FROM students26")
+->fetch_assoc()['total'];
 
 /*
-ALL STUDENTS
+----------------------------------
+TODAY PRESENT
+----------------------------------
 */
 
-$studentsQuery = "
-SELECT * FROM students26
-";
+$todayPresent = $conn->query("
+SELECT COUNT(DISTINCT student_id) as total
+FROM attendance
+WHERE attendance_date='$today'
+")
+->fetch_assoc()['total'];
+
+$todayAbsent = $totalStudents - $todayPresent;
+
+/*
+----------------------------------
+STUDENT QUERY
+----------------------------------
+*/
+
+$studentsQuery = "SELECT * FROM students26 WHERE 1=1";
 
 if($search != ''){
-
     $studentsQuery .= "
-    WHERE name LIKE '%$search%'
-    OR enrollment_id LIKE '%$search%'
+    AND (
+        name LIKE '%$search%'
+        OR enrollment_id LIKE '%$search%'
+        OR contact_number LIKE '%$search%'
+    )
     ";
-
 }
 
-$students = $conn->query($studentsQuery);
+$studentsQuery .= " ORDER BY name ASC";
 
+$students = $conn->query($studentsQuery);
 ?>
 
 <!DOCTYPE html>
@@ -55,20 +69,27 @@ $students = $conn->query($studentsQuery);
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Attendance Summary</title>
+<title>Advanced Attendance Dashboard</title>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 
 <style>
 
-body{
+*{
     margin:0;
-    padding:20px;
+    padding:0;
+    box-sizing:border-box;
+}
+
+body{
     background:#020617;
-    font-family:Arial;
+    font-family:Arial, Helvetica, sans-serif;
     color:white;
+    padding:20px;
 }
 
 .container{
-    max-width:1400px;
+    max-width:1600px;
     margin:auto;
 }
 
@@ -76,66 +97,105 @@ body{
     display:flex;
     justify-content:space-between;
     align-items:center;
+    gap:20px;
     margin-bottom:25px;
     flex-wrap:wrap;
-    gap:15px;
 }
 
-h1{
-    margin:0;
+.heading h1{
+    font-size:32px;
+}
+
+.heading p{
+    color:#94a3b8;
+    margin-top:8px;
 }
 
 .filters{
     display:flex;
     gap:10px;
     flex-wrap:wrap;
+    background:#0f172a;
+    padding:15px;
+    border-radius:16px;
+    border:1px solid #1e293b;
 }
 
-input{
+.filters input,
+.filters select{
     padding:12px;
     border:none;
     border-radius:10px;
-    background:#0f172a;
+    background:#020617;
     color:white;
-    border:1px solid #1e293b;
+    border:1px solid #334155;
+    min-width:170px;
 }
 
 button{
     padding:12px 18px;
     border:none;
     border-radius:10px;
-    background:#38bdf8;
+    background:#0ea5e9;
     color:white;
     cursor:pointer;
     font-weight:bold;
 }
 
 button:hover{
-    background:#0ea5e9;
+    background:#0284c7;
+}
+
+.reset-btn{
+    background:#ef4444;
+    text-decoration:none;
+    color:white;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:12px 18px;
+    border-radius:10px;
+    font-weight:bold;
+}
+
+.reset-btn:hover{
+    background:#dc2626;
 }
 
 .stats{
     display:grid;
-    grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+    grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
     gap:20px;
     margin-bottom:25px;
 }
 
 .card{
     background:#0f172a;
-    padding:25px;
-    border-radius:20px;
     border:1px solid #1e293b;
+    border-radius:20px;
+    padding:25px;
 }
 
-.card h2{
-    margin:0;
-    font-size:40px;
+.stat-box h2{
+    font-size:42px;
+    margin-bottom:10px;
 }
 
-.card p{
-    margin-top:10px;
+.stat-box p{
     color:#94a3b8;
+}
+
+.section-title{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:20px;
+    flex-wrap:wrap;
+    gap:10px;
+}
+
+.section-title h2{
+    color:#38bdf8;
 }
 
 .table-box{
@@ -145,228 +205,243 @@ button:hover{
 table{
     width:100%;
     border-collapse:collapse;
+    min-width:1200px;
 }
 
 th{
     background:#1e293b;
     padding:15px;
     text-align:left;
+    font-size:14px;
 }
 
 td{
     padding:15px;
     border-bottom:1px solid #1e293b;
+    font-size:14px;
 }
 
 tr:hover{
     background:#111827;
 }
 
-.present{
-    color:#22c55e;
-    font-weight:bold;
-}
-
-.absent{
-    color:#ef4444;
-    font-weight:bold;
-}
-
 .badge{
-    padding:6px 12px;
+    padding:7px 14px;
     border-radius:20px;
-    font-size:13px;
+    font-size:12px;
     font-weight:bold;
 }
 
 .green{
     background:#14532d;
-    color:#22c55e;
+    color:#4ade80;
 }
 
 .red{
     background:#7f1d1d;
-    color:#ef4444;
+    color:#f87171;
 }
 
 .orange{
     background:#78350f;
-    color:#f59e0b;
+    color:#fbbf24;
 }
 
-.search-title{
-    margin-bottom:20px;
-    color:#38bdf8;
+.view-btn{
+    background:#22c55e;
+    color:white;
+    padding:10px 14px;
+    border-radius:10px;
+    text-decoration:none;
+    font-size:13px;
+    font-weight:bold;
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+}
+
+.view-btn:hover{
+    background:#16a34a;
+}
+
+.present-text{
+    color:#22c55e;
+    font-weight:bold;
+}
+
+.absent-text{
+    color:#ef4444;
+    font-weight:bold;
+}
+
+@media(max-width:768px){
+
+    .topbar{
+        flex-direction:column;
+        align-items:flex-start;
+    }
+
+    .filters{
+        width:100%;
+    }
+
+    .filters input,
+    .filters select,
+    button,
+    .reset-btn{
+        width:100%;
+    }
 }
 
 </style>
 
 </head>
-
 <body>
 
 <div class="container">
 
 <div class="topbar">
 
-<h1>Attendance Summary Dashboard</h1>
+<div class="heading">
+    <h1>
+        <i class="fa-solid fa-chart-column"></i>
+        Advanced Attendance Dashboard
+    </h1>
+
+    <p>Manage and monitor complete student attendance records</p>
+</div>
 
 <form method="GET" class="filters">
 
-<input
-type="text"
-name="search"
-placeholder="Search Student"
-value="<?php echo $search; ?>"
->
+<input type="text" name="search" placeholder="Search Name / Enrollment"
+value="<?php echo htmlspecialchars($search); ?>">
 
-<input
-type="date"
-name="from"
-value="<?php echo $from; ?>"
->
+<input type="date" name="from" value="<?php echo $from; ?>">
 
-<input
-type="date"
-name="to"
-value="<?php echo $to; ?>"
->
+<input type="date" name="to" value="<?php echo $to; ?>">
+
+<select name="status">
+    <option value="">All Status</option>
+    <option value="present" <?php if($status=='present') echo 'selected'; ?>>Present</option>
+    <option value="absent" <?php if($status=='absent') echo 'selected'; ?>>Absent</option>
+</select>
 
 <button type="submit">
-Search
+    <i class="fa-solid fa-magnifying-glass"></i>
+    Search
 </button>
+
+<a href="attendance_dashboard.php" class="reset-btn">
+    Reset
+</a>
 
 </form>
 
 </div>
 
-<?php
-
-/*
-TOTAL STUDENTS
-*/
-
-$totalStudents = $conn->query("
-SELECT COUNT(*) as total
-FROM students26
-")->fetch_assoc()['total'];
-
-/*
-TODAY PRESENT
-*/
-
-$todayPresent = $conn->query("
-SELECT COUNT(*) as total
-FROM attendance
-WHERE attendance_date='$today'
-")->fetch_assoc()['total'];
-
-$todayAbsent = $totalStudents - $todayPresent;
-
-?>
-
 <div class="stats">
 
-<div class="card">
-
-<h2>
-<?php echo $totalStudents; ?>
-</h2>
-
-<p>Total Students</p>
-
+<div class="card stat-box">
+    <h2><?php echo $totalStudents; ?></h2>
+    <p>Total Students</p>
 </div>
 
-<div class="card">
-
-<h2 style="color:#22c55e">
-<?php echo $todayPresent; ?>
-</h2>
-
-<p>Present Today</p>
-
+<div class="card stat-box">
+    <h2 style="color:#22c55e">
+        <?php echo $todayPresent; ?>
+    </h2>
+    <p>Present Today</p>
 </div>
 
-<div class="card">
-
-<h2 style="color:#ef4444">
-<?php echo $todayAbsent; ?>
-</h2>
-
-<p>Absent Today</p>
-
+<div class="card stat-box">
+    <h2 style="color:#ef4444">
+        <?php echo $todayAbsent; ?>
+    </h2>
+    <p>Absent Today</p>
 </div>
 
-<div class="card">
-
-<h2 style="color:#38bdf8">
-<?php echo $today; ?>
-</h2>
-
-<p>Current Date</p>
-
+<div class="card stat-box">
+    <h2 style="color:#38bdf8;font-size:25px;">
+        <?php echo date('d M Y'); ?>
+    </h2>
+    <p>Today's Date</p>
 </div>
 
 </div>
 
 <div class="card">
 
-<h2 class="search-title">
-Students Attendance Report
-</h2>
+<div class="section-title">
+    <h2>
+        <i class="fa-solid fa-users"></i>
+        All Students Attendance Report
+    </h2>
+</div>
 
 <div class="table-box">
 
 <table>
 
 <tr>
-
-<th>Student</th>
-<th>Enrollment</th>
-<th>Today Status</th>
-<th>Total Present</th>
-<th>Total Absent</th>
-<th>Attendance %</th>
-<th>Last Attendance</th>
-
+    <th>#</th>
+    <th>Student Name</th>
+    <th>Enrollment ID</th>
+    <th>Today's Status</th>
+    <th>Total Present</th>
+    <th>Total Absent</th>
+    <th>Attendance %</th>
+    <th>Last Attendance</th>
+    <th>Action</th>
 </tr>
 
 <?php
+
+$sr = 1;
 
 while($student = $students->fetch_assoc()){
 
     $studentId = $student['id'];
 
     /*
+    ----------------------------------
     TODAY STATUS
+    ----------------------------------
     */
 
     $todayCheck = $conn->query("
-    SELECT * FROM attendance
+    SELECT id FROM attendance
     WHERE student_id='$studentId'
     AND attendance_date='$today'
     ");
 
     $isPresent = $todayCheck->num_rows > 0;
 
+    if($status == 'present' && !$isPresent){
+        continue;
+    }
+
+    if($status == 'absent' && $isPresent){
+        continue;
+    }
+
     /*
-    DATE FILTER
+    ----------------------------------
+    DATE CONDITION
+    ----------------------------------
     */
 
     $dateCondition = "";
 
     if($from != '' && $to != ''){
-
         $dateCondition = "
-        AND attendance_date
-        BETWEEN '$from'
-        AND '$to'
+        AND attendance_date BETWEEN '$from' AND '$to'
         ";
-
     }
 
     /*
+    ----------------------------------
     TOTAL PRESENT
+    ----------------------------------
     */
 
     $presentQuery = $conn->query("
@@ -376,55 +451,65 @@ while($student = $students->fetch_assoc()){
     $dateCondition
     ");
 
-    $presentCount =
-    $presentQuery->fetch_assoc()['total'];
+    $presentCount = $presentQuery->fetch_assoc()['total'];
 
     /*
+    ----------------------------------
     TOTAL DAYS
+    ----------------------------------
     */
 
     if($from != '' && $to != ''){
 
-        $days =
-        (strtotime($to) - strtotime($from))
-        / (60*60*24) + 1;
+        $days = (
+            strtotime($to) - strtotime($from)
+        ) / (60*60*24) + 1;
 
     }else{
 
-        $days = 30;
+        $startDate = $conn->query("
+        SELECT attendance_date
+        FROM attendance
+        ORDER BY attendance_date ASC
+        LIMIT 1
+        ");
 
+        if($startDate->num_rows > 0){
+
+            $firstDate = $startDate->fetch_assoc()['attendance_date'];
+
+            $days = (
+                strtotime($today) - strtotime($firstDate)
+            ) / (60*60*24) + 1;
+
+        }else{
+            $days = 1;
+        }
     }
 
-    $absentCount =
-    $days - $presentCount;
+    $absentCount = $days - $presentCount;
 
     if($absentCount < 0){
-
         $absentCount = 0;
-
     }
 
     /*
-    PERCENTAGE
+    ----------------------------------
+    ATTENDANCE PERCENTAGE
+    ----------------------------------
     */
 
-    if($days > 0){
-
-        $percentage =
-        round(($presentCount/$days)*100);
-
-    }else{
-
-        $percentage = 0;
-
-    }
+    $percentage = round(($presentCount / $days) * 100);
 
     /*
+    ----------------------------------
     LAST ATTENDANCE
+    ----------------------------------
     */
 
     $lastAttendance = $conn->query("
-    SELECT * FROM attendance
+    SELECT attendance_date, attendance_time
+    FROM attendance
     WHERE student_id='$studentId'
     ORDER BY id DESC
     LIMIT 1
@@ -434,211 +519,72 @@ while($student = $students->fetch_assoc()){
 
     if($lastAttendance->num_rows > 0){
 
-        $lastRow =
-        $lastAttendance->fetch_assoc();
+        $lastRow = $lastAttendance->fetch_assoc();
 
         $lastDate =
-        $lastRow['attendance_date']
-        ." ".
-        $lastRow['attendance_time'];
-
+        date('d M Y', strtotime($lastRow['attendance_date']))
+        ." at " .
+        date('h:i A', strtotime($lastRow['attendance_time']));
     }
-
 ?>
 
 <tr>
 
+<td><?php echo $sr++; ?></td>
+
 <td>
-<?php echo $student['name']; ?>
+    <?php echo htmlspecialchars($student['name']); ?>
 </td>
 
 <td>
-<?php echo $student['enrollment_id']; ?>
+    <?php echo htmlspecialchars($student['enrollment_id']); ?>
 </td>
 
 <td>
 
 <?php
-
 if($isPresent){
-
-    echo "
-    <span class='badge green'>
-    Present
-    </span>
-    ";
-
+    echo '<span class="badge green">Present</span>';
 }else{
-
-    echo "
-    <span class='badge red'>
-    Absent
-    </span>
-    ";
-
+    echo '<span class="badge red">Absent</span>';
 }
-
 ?>
 
 </td>
 
-<td class="present">
-<?php echo $presentCount; ?>
+<td class="present-text">
+    <?php echo $presentCount; ?>
 </td>
 
-<td class="absent">
-<?php echo $absentCount; ?>
+<td class="absent-text">
+    <?php echo $absentCount; ?>
 </td>
 
 <td>
 
 <?php
-
 if($percentage >= 75){
-
-    echo "
-    <span class='badge green'>
-    $percentage%
-    </span>
-    ";
-
+    echo "<span class='badge green'>$percentage%</span>";
 }else if($percentage >= 40){
-
-    echo "
-    <span class='badge orange'>
-    $percentage%
-    </span>
-    ";
-
+    echo "<span class='badge orange'>$percentage%</span>";
 }else{
-
-    echo "
-    <span class='badge red'>
-    $percentage%
-    </span>
-    ";
-
+    echo "<span class='badge red'>$percentage%</span>";
 }
-
 ?>
 
 </td>
 
 <td>
-<?php echo $lastDate; ?>
-</td>
-
-</tr>
-
-<?php } ?>
-
-</table>
-
-</div>
-
-</div>
-
-<?php
-
-/*
-DAILY RECORDS
-*/
-
-$recordsQuery = "
-SELECT attendance.*, students26.name,
-students26.enrollment_id
-FROM attendance
-INNER JOIN students26
-ON attendance.student_id = students26.id
-";
-
-$where = [];
-
-if($from != '' && $to != ''){
-
-    $where[] = "
-    attendance_date
-    BETWEEN '$from'
-    AND '$to'
-    ";
-
-}
-
-if($search != ''){
-
-    $where[] = "
-    (
-        students26.name LIKE '%$search%'
-        OR students26.enrollment_id LIKE '%$search%'
-    )
-    ";
-
-}
-
-if(count($where) > 0){
-
-    $recordsQuery .= "
-    WHERE ".implode(" AND ",$where);
-
-}
-
-$recordsQuery .= "
-ORDER BY attendance.id DESC
-";
-
-$records = $conn->query($recordsQuery);
-
-?>
-
-<div class="card" style="margin-top:25px;">
-
-<h2 class="search-title">
-Daily Attendance Records
-</h2>
-
-<div class="table-box">
-
-<table>
-
-<tr>
-
-<th>Date</th>
-<th>Time</th>
-<th>Name</th>
-<th>Enrollment</th>
-<th>Status</th>
-
-</tr>
-
-<?php
-
-while($row = $records->fetch_assoc()){
-
-?>
-
-<tr>
-
-<td>
-<?php echo $row['attendance_date']; ?>
-</td>
-
-<td>
-<?php echo $row['attendance_time']; ?>
-</td>
-
-<td>
-<?php echo $row['name']; ?>
-</td>
-
-<td>
-<?php echo $row['enrollment_id']; ?>
+    <?php echo $lastDate; ?>
 </td>
 
 <td>
 
-<span class="badge green">
-Present
-</span>
+<a class="view-btn"
+href="student_attendance_history.php?id=<?php echo $studentId; ?>">
+    <i class="fa-solid fa-eye"></i>
+    View Record
+</a>
 
 </td>
 
