@@ -11,9 +11,9 @@ SEARCH + FILTERS
 */
 
 $search = isset($_GET['search']) ? trim($_GET['search']) : '';
-$from   = isset($_GET['from']) ? $_GET['from'] : '';
-$to     = isset($_GET['to']) ? $_GET['to'] : '';
-$status = isset($_GET['status']) ? $_GET['status'] : '';
+$from   = isset($_GET['from']) ? trim($_GET['from']) : '';
+$to     = isset($_GET['to']) ? trim($_GET['to']) : '';
+$status = isset($_GET['status']) ? trim($_GET['status']) : '';
 
 /*
 ----------------------------------
@@ -21,8 +21,10 @@ TOTAL STUDENTS
 ----------------------------------
 */
 
-$totalStudents = $conn->query("SELECT COUNT(*) as total FROM students26")
-->fetch_assoc()['total'];
+$totalStudents = $conn->query("
+SELECT COUNT(*) as total 
+FROM students26
+")->fetch_assoc()['total'];
 
 /*
 ----------------------------------
@@ -34,8 +36,7 @@ $todayPresent = $conn->query("
 SELECT COUNT(DISTINCT student_id) as total
 FROM attendance
 WHERE attendance_date='$today'
-")
-->fetch_assoc()['total'];
+")->fetch_assoc()['total'];
 
 $todayAbsent = $totalStudents - $todayPresent;
 
@@ -45,9 +46,15 @@ STUDENT QUERY
 ----------------------------------
 */
 
-$studentsQuery = "SELECT * FROM students26 WHERE 1=1";
+$studentsQuery = "
+SELECT * FROM students26
+WHERE 1=1
+";
 
-if($search != ''){
+if (!empty($search)) {
+
+    $search = mysqli_real_escape_string($conn, $search);
+
     $studentsQuery .= "
     AND (
         name LIKE '%$search%'
@@ -60,10 +67,15 @@ if($search != ''){
 $studentsQuery .= " ORDER BY name ASC";
 
 $students = $conn->query($studentsQuery);
+
+if (!$students) {
+    die("Query Failed : " . $conn->error);
+}
 ?>
 
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
 
 <meta charset="UTF-8">
@@ -71,340 +83,264 @@ $students = $conn->query($studentsQuery);
 
 <title>Advanced Attendance Dashboard</title>
 
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<link rel="stylesheet"
+href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 
 <style>
-/*---------------------------------------
-  MINIMAL UI - White/Slate Theme
-  Light background, subtle shadows, clean typography
----------------------------------------*/
 
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
 }
 
-body {
-    background: #f1f5f9;  /* Soft slate background */
-     font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-    color: #0f172a;
-    padding: 24px;
-    line-height: 1.5;
+body{
+    background:#f1f5f9;
+    font-family:'Poppins',sans-serif;
+    color:#0f172a;
+    padding:24px;
 }
 
-.container {
-    max-width: 1600px;
-    margin: 0 auto;
+.container{
+    max-width:1600px;
+    margin:auto;
 }
 
-/*---------------------------------------
-  TOPBAR + HEADING
----------------------------------------*/
-.topbar {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-end;
-    gap: 24px;
-    margin-bottom: 32px;
-    flex-wrap: wrap;
+.topbar{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-end;
+    gap:20px;
+    margin-bottom:30px;
+    flex-wrap:wrap;
 }
 
-.heading h1 {
-    font-size: 28px;
-    font-weight: 600;
-    color: #0f172a;
-    letter-spacing: -0.3px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
+.heading h1{
+    font-size:30px;
+    font-weight:700;
+    display:flex;
+    align-items:center;
+    gap:12px;
 }
 
-.heading h1 i {
-    color: #3b82f6;
-    font-size: 28px;
+.heading h1 i{
+    color:#2563eb;
 }
 
-.heading p {
-    color: #475569;
-    margin-top: 6px;
-    font-size: 15px;
+.heading p{
+    margin-top:5px;
+    color:#64748b;
 }
 
-/*---------------------------------------
-  FILTERS FORM (clean white card)
----------------------------------------*/
-.filters {
-    display: flex;
-    gap: 12px;
-    flex-wrap: wrap;
-    background: #ffffff;
-    padding: 16px 20px;
-    border-radius: 20px;
-    border: 1px solid #e2e8f0;
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
-    align-items: center;
+.filters{
+    display:flex;
+    gap:12px;
+    flex-wrap:wrap;
+    background:#fff;
+    padding:18px;
+    border-radius:20px;
+    border:1px solid #e2e8f0;
 }
 
 .filters input,
-.filters select {
-    padding: 10px 14px;
-    border: 1px solid #cbd5e1;
-    border-radius: 12px;
-    background: #ffffff;
-    color: #0f172a;
-    font-size: 14px;
-    transition: all 0.2s ease;
-    outline: none;
-    min-width: 170px;
+.filters select{
+    padding:12px 14px;
+    border:1px solid #cbd5e1;
+    border-radius:12px;
+    min-width:180px;
+    font-size:14px;
+    outline:none;
 }
 
 .filters input:focus,
-.filters select:focus {
-    border-color: #3b82f6;
-    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+.filters select:focus{
+    border-color:#2563eb;
+    box-shadow:0 0 0 3px rgba(37,99,235,0.1);
 }
 
-button {
-    padding: 10px 20px;
-    border: none;
-    border-radius: 12px;
-    background: #3b82f6;
-    color: white;
-    cursor: pointer;
-    font-weight: 500;
-    font-size: 14px;
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    transition: all 0.2s;
+button{
+    background:#2563eb;
+    color:white;
+    border:none;
+    padding:12px 18px;
+    border-radius:12px;
+    cursor:pointer;
+    font-weight:600;
+    display:flex;
+    align-items:center;
+    gap:8px;
 }
 
-button:hover {
-    background: #2563eb;
-    transform: translateY(-1px);
+button:hover{
+    background:#1d4ed8;
 }
 
-.reset-btn {
-    background: #f1f5f9;
-    color: #475569;
-    text-decoration: none;
-    padding: 10px 20px;
-    border-radius: 12px;
-    font-weight: 500;
-    font-size: 14px;
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    transition: all 0.2s;
-    border: 1px solid #e2e8f0;
+.reset-btn{
+    background:#f1f5f9;
+    color:#334155;
+    text-decoration:none;
+    padding:12px 18px;
+    border-radius:12px;
+    border:1px solid #e2e8f0;
+    font-weight:600;
 }
 
-.reset-btn:hover {
-    background: #e2e8f0;
-    color: #0f172a;
-    transform: translateY(-1px);
+.reset-btn:hover{
+    background:#e2e8f0;
 }
 
-/*---------------------------------------
-  STATS CARDS (clean minimal)
----------------------------------------*/
-.stats {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-    gap: 20px;
-    margin-bottom: 32px;
+.stats{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(240px,1fr));
+    gap:20px;
+    margin-bottom:30px;
 }
 
-.card {
-    background: #ffffff;
-    border-radius: 24px;
-    padding: 20px 24px;
-    border: 1px solid #e2e8f0;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
-    transition: box-shadow 0.2s;
+.card{
+    background:white;
+    border-radius:24px;
+    padding:24px;
+    border:1px solid #e2e8f0;
 }
 
-.card:hover {
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.05);
+.stat-box h2{
+    font-size:42px;
+    margin-bottom:10px;
 }
 
-.stat-box h2 {
-    font-size: 40px;
-    font-weight: 700;
-    margin-bottom: 8px;
-    letter-spacing: -1px;
-    color: #0f172a;
+.stat-box p{
+    color:#64748b;
+    font-size:14px;
+    font-weight:600;
+    text-transform:uppercase;
 }
 
-.stat-box p {
-    color: #475569;
-    font-size: 14px;
-    font-weight: 500;
-    text-transform: uppercase;
-    letter-spacing: 0.3px;
+.section-title{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:20px;
 }
 
-/* colored numbers for present/absent */
-.stat-box h2[style*="color:#22c55e"],
-.stat-box h2:has(+ p:contains("Present")) {
-    color: #10b981;
+.section-title h2{
+    font-size:22px;
+    display:flex;
+    align-items:center;
+    gap:10px;
 }
 
-/*---------------------------------------
-  SECTION TITLE
----------------------------------------*/
-.section-title {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 20px;
-    flex-wrap: wrap;
-    gap: 12px;
+.section-title h2 i{
+    color:#2563eb;
 }
 
-.section-title h2 {
-    font-size: 20px;
-    font-weight: 600;
-    color: #0f172a;
-    display: flex;
-    align-items: center;
-    gap: 10px;
+.table-box{
+    overflow-x:auto;
 }
 
-.section-title h2 i {
-    color: #3b82f6;
-    font-size: 20px;
+table{
+    width:100%;
+    border-collapse:collapse;
 }
 
-/*---------------------------------------
-  TABLE (clean, borderless, minimal)
----------------------------------------*/
-.table-box {
-    overflow-x: auto;
-    border-radius: 20px;
+th{
+    background:#f8fafc;
+    padding:15px;
+    text-align:left;
+    border-bottom:1px solid #e2e8f0;
+    font-size:14px;
 }
 
-table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 14px;
+td{
+    padding:15px;
+    border-bottom:1px solid #f1f5f9;
+    font-size:14px;
 }
 
-th {
-    text-align: left;
-    padding: 14px 16px;
-    background: #f8fafc;
-    color: #334155;
-    font-weight: 600;
-    font-size: 13px;
-    border-bottom: 1px solid #e2e8f0;
+tr:hover td{
+    background:#fafcff;
 }
 
-td {
-    padding: 14px 16px;
-    border-bottom: 1px solid #f1f5f9;
-    color: #1e293b;
-    vertical-align: middle;
+.badge{
+    padding:5px 12px;
+    border-radius:30px;
+    font-size:12px;
+    font-weight:600;
+    display:inline-block;
 }
 
-tr:hover td {
-    background-color: #fafcff;
+.green{
+    background:#ecfdf5;
+    color:#059669;
 }
 
-/* badges */
-.badge {
-    display: inline-flex;
-    align-items: center;
-    padding: 4px 12px;
-    border-radius: 40px;
-    font-size: 12px;
-    font-weight: 500;
-    white-space: nowrap;
+.red{
+    background:#fef2f2;
+    color:#dc2626;
 }
 
-.green {
-    background: #ecfdf5;
-    color: #059669;
+.orange{
+    background:#fff7ed;
+    color:#d97706;
 }
 
-.red {
-    background: #fef2f2;
-    color: #dc2626;
+.present-text{
+    color:#059669;
+    font-weight:700;
 }
 
-.orange {
-    background: #fffbeb;
-    color: #d97706;
+.absent-text{
+    color:#dc2626;
+    font-weight:700;
 }
 
-.present-text {
-    color: #059669;
-    font-weight: 600;
+.view-btn{
+    background:#eff6ff;
+    color:#2563eb;
+    text-decoration:none;
+    padding:8px 14px;
+    border-radius:30px;
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+    font-size:13px;
+    font-weight:600;
 }
 
-.absent-text {
-    color: #dc2626;
-    font-weight: 600;
+.view-btn:hover{
+    background:#dbeafe;
 }
 
-/* view button */
-.view-btn {
-    background: #f1f5f9;
-    color: #1e40af;
-    padding: 6px 14px;
-    border-radius: 30px;
-    text-decoration: none;
-    font-size: 12px;
-    font-weight: 500;
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    transition: all 0.2s;
-    border: 1px solid #e2e8f0;
-}
+@media(max-width:768px){
 
-.view-btn:hover {
-    background: #e2e8f0;
-    color: #1e3a8a;
-    transform: translateY(-1px);
-}
-
-/* responsive */
-@media (max-width: 768px) {
-    body {
-        padding: 16px;
+    body{
+        padding:16px;
     }
 
-    .topbar {
-        flex-direction: column;
-        align-items: stretch;
+    .topbar{
+        flex-direction:column;
+        align-items:stretch;
     }
 
-    .filters {
-        width: 100%;
-        flex-direction: column;
-        align-items: stretch;
+    .filters{
+        flex-direction:column;
     }
 
     .filters input,
     .filters select,
     button,
-    .reset-btn {
-        width: 100%;
+    .reset-btn{
+        width:100%;
     }
 
-    .stats {
-        grid-template-columns: 1fr;
-    }
-
-    th, td {
-        padding: 10px 12px;
+    .stats{
+        grid-template-columns:1fr;
     }
 }
+
 </style>
 
 </head>
+
 <body>
 
 <div class="container">
@@ -417,31 +353,55 @@ tr:hover td {
         Advanced Attendance Dashboard
     </h1>
 
-    <p>Manage and monitor complete student attendance records</p>
+    <p>
+        Manage and monitor complete student attendance records
+    </p>
 </div>
 
-<form method="GET" class="filters">
+<form method="GET" action="" class="filters">
 
-<input type="text" name="search" placeholder="Search Name / Enrollment"
-value="<?php echo htmlspecialchars($search); ?>">
+<input
+type="text"
+name="search"
+placeholder="Search Name / Enrollment / Contact"
+value="<?php echo htmlspecialchars($search); ?>"
+>
 
-<input type="date" name="from" value="<?php echo $from; ?>">
+<input
+type="date"
+name="from"
+value="<?php echo htmlspecialchars($from); ?>"
+>
 
-<input type="date" name="to" value="<?php echo $to; ?>">
+<input
+type="date"
+name="to"
+value="<?php echo htmlspecialchars($to); ?>"
+>
 
 <select name="status">
-    <option value="">All Status</option>
-    <option value="present" <?php if($status=='present') echo 'selected'; ?>>Present</option>
-    <option value="absent" <?php if($status=='absent') echo 'selected'; ?>>Absent</option>
+
+<option value="">All Status</option>
+
+<option value="present"
+<?php if($status=='present') echo 'selected'; ?>>
+Present
+</option>
+
+<option value="absent"
+<?php if($status=='absent') echo 'selected'; ?>>
+Absent
+</option>
+
 </select>
 
 <button type="submit">
-    <i class="fa-solid fa-magnifying-glass"></i>
-    Search
+<i class="fa-solid fa-magnifying-glass"></i>
+Search
 </button>
 
-<a href="attendance_dashboard.php" class="reset-btn">
-    Reset
+<a href="<?php echo $_SERVER['PHP_SELF']; ?>" class="reset-btn">
+Reset
 </a>
 
 </form>
@@ -456,7 +416,7 @@ value="<?php echo htmlspecialchars($search); ?>">
 </div>
 
 <div class="card stat-box">
-    <h2 style="color:#22c55e">
+    <h2 style="color:#10b981">
         <?php echo $todayPresent; ?>
     </h2>
     <p>Present Today</p>
@@ -470,7 +430,7 @@ value="<?php echo htmlspecialchars($search); ?>">
 </div>
 
 <div class="card stat-box">
-    <h2 style="color:#38bdf8;font-size:25px;">
+    <h2 style="font-size:24px;color:#0ea5e9">
         <?php echo date('d M Y'); ?>
     </h2>
     <p>Today's Date</p>
@@ -492,15 +452,15 @@ value="<?php echo htmlspecialchars($search); ?>">
 <table>
 
 <tr>
-    <th>#</th>
-    <th>Student Name</th>
-    <th>Enrollment ID</th>
-    <th>Today's Status</th>
-    <th>Total Present</th>
-    <th>Total Absent</th>
-    <th>Attendance %</th>
-    <th>Last Attendance</th>
-    <th>Action</th>
+<th>#</th>
+<th>Student Name</th>
+<th>Enrollment ID</th>
+<th>Today's Status</th>
+<th>Total Present</th>
+<th>Total Absent</th>
+<th>Attendance %</th>
+<th>Last Attendance</th>
+<th>Action</th>
 </tr>
 
 <?php
@@ -518,12 +478,20 @@ while($student = $students->fetch_assoc()){
     */
 
     $todayCheck = $conn->query("
-    SELECT id FROM attendance
+    SELECT id
+    FROM attendance
     WHERE student_id='$studentId'
     AND attendance_date='$today'
+    LIMIT 1
     ");
 
     $isPresent = $todayCheck->num_rows > 0;
+
+    /*
+    ----------------------------------
+    STATUS FILTER
+    ----------------------------------
+    */
 
     if($status == 'present' && !$isPresent){
         continue;
@@ -541,9 +509,11 @@ while($student = $students->fetch_assoc()){
 
     $dateCondition = "";
 
-    if($from != '' && $to != ''){
+    if(!empty($from) && !empty($to)){
+
         $dateCondition = "
-        AND attendance_date BETWEEN '$from' AND '$to'
+        AND attendance_date
+        BETWEEN '$from' AND '$to'
         ";
     }
 
@@ -568,7 +538,7 @@ while($student = $students->fetch_assoc()){
     ----------------------------------
     */
 
-    if($from != '' && $to != ''){
+    if(!empty($from) && !empty($to)){
 
         $days = (
             strtotime($to) - strtotime($from)
@@ -604,7 +574,7 @@ while($student = $students->fetch_assoc()){
 
     /*
     ----------------------------------
-    ATTENDANCE PERCENTAGE
+    ATTENDANCE %
     ----------------------------------
     */
 
@@ -632,9 +602,10 @@ while($student = $students->fetch_assoc()){
 
         $lastDate =
         date('d M Y', strtotime($lastRow['attendance_date']))
-        ." at " .
+        ." at ".
         date('h:i A', strtotime($lastRow['attendance_time']));
     }
+
 ?>
 
 <tr>
@@ -642,11 +613,11 @@ while($student = $students->fetch_assoc()){
 <td><?php echo $sr++; ?></td>
 
 <td>
-    <?php echo htmlspecialchars($student['name']); ?>
+<?php echo htmlspecialchars($student['name']); ?>
 </td>
 
 <td>
-    <?php echo htmlspecialchars($student['enrollment_id']); ?>
+<?php echo htmlspecialchars($student['enrollment_id']); ?>
 </td>
 
 <td>
@@ -662,21 +633,27 @@ if($isPresent){
 </td>
 
 <td class="present-text">
-    <?php echo $presentCount; ?>
+<?php echo $presentCount; ?>
 </td>
 
 <td class="absent-text">
-    <?php echo $absentCount; ?>
+<?php echo $absentCount; ?>
 </td>
 
 <td>
 
 <?php
+
 if($percentage >= 75){
+
     echo "<span class='badge green'>$percentage%</span>";
+
 }else if($percentage >= 40){
+
     echo "<span class='badge orange'>$percentage%</span>";
+
 }else{
+
     echo "<span class='badge red'>$percentage%</span>";
 }
 ?>
@@ -684,19 +661,31 @@ if($percentage >= 75){
 </td>
 
 <td>
-    <?php echo $lastDate; ?>
+<?php echo $lastDate; ?>
 </td>
 
 <td>
 
 <a class="view-btn"
 href="student_attendance_history.php?id=<?php echo $studentId; ?>">
-    <i class="fa-solid fa-eye"></i>
-    View Record
+
+<i class="fa-solid fa-eye"></i>
+View Record
+
 </a>
 
 </td>
 
+</tr>
+
+<?php } ?>
+
+<?php if($sr == 1){ ?>
+
+<tr>
+<td colspan="9" style="text-align:center;padding:40px;">
+    No Students Found
+</td>
 </tr>
 
 <?php } ?>
