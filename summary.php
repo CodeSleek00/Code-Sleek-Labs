@@ -87,7 +87,7 @@ $students = $conn->query($studentsQuery);
 
 body {
     background: #f1f5f9;  /* Soft slate background */
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+     font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
     color: #0f172a;
     padding: 24px;
     line-height: 1.5;
