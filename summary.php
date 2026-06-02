@@ -603,7 +603,7 @@ while($student = $students->fetch_assoc()){
         $lastDate =
         date('d M Y', strtotime($lastRow['attendance_date']))
         ." at ".
-        date('h:i A', strtotime($lastRow['attendance_time']));
+      date('H:i', strtotime($lastRow['attendance_time']));
     }
 
 ?>
