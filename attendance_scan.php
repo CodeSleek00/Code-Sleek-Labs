@@ -616,7 +616,7 @@ async function loadFaces(){
     faceMatcher =
     new faceapi.FaceMatcher(
         labeled,
-        0.5
+        0.40
     );
 
 }
