@@ -616,7 +616,7 @@ async function loadFaces(){
     faceMatcher =
     new faceapi.FaceMatcher(
         labeled,
-        0.6
+        0.5
     );
 
 }
@@ -750,8 +750,7 @@ async function detectFaces(){
 
                         body:JSON.stringify({
 
-                            student_id:result.label,
-                            distance: result.distance
+                            student_id:result.label
 
                         })
 
@@ -768,7 +767,7 @@ async function detectFaces(){
 
         });
 
-    },1000);
+    },2500);
 
 }
 
